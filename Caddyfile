@@ -1,0 +1,14 @@
+{
+    skip_install_trust
+    
+    frankenphp {
+        num_threads 16
+        worker /app/public/index.php
+    }
+}
+
+:8000 {
+    root * /app/public
+    encode zstd br gzip
+    php_server
+}

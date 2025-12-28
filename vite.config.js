@@ -35,4 +35,17 @@ export default defineConfig({
             }
         })
     ],
+    server: {
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'wsevo.prolocoventicano.com',
+            protocol: 'wss',
+            clientPort: 443,
+        },
+        watch: {
+            usePolling: true,
+        },
+    },
 });

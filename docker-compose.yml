@@ -1,33 +1,35 @@
 services:
+    init:
+        image: alpine:latest
+        command: >
+            sh -c "mkdir -p /data/pgsql /data/redis &&
+                   chmod -R 777 /data"
+        volumes:
+            - ./docker:/data
+        user: root
+
     app:
         build:
             context: .
             dockerfile: Dockerfile
-        # image: 'dunglas/frankenphp:php8.4'
-        environment:
-            SERVER_NAME: 'http://:8000'
-            APP_URL: 'https://evo.prolocoventicano.com'
-            APP_KEY: '${APP_KEY:-base64:xgH1qY6U+d9wYY3xZ8J7sK/8j4n9l1k0m2o3p4q5r6s=}'
-            APP_DEBUG: 'true'
-            DB_CONNECTION: 'pgsql'
-            DB_HOST: 'db'
-            DB_PORT: '5432'
-            DB_DATABASE: '${DB_DATABASE:-plv_saas}'
-            DB_USERNAME: '${DB_USERNAME:-sail}'
-            DB_PASSWORD: '${DB_PASSWORD:-password}'
-            REDIS_HOST: 'redis'
-            REDIS_PASSWORD: '${REDIS_PASSWORD:-null}'
-            REDIS_PORT: '6379'
+        restart: unless-stopped
         volumes:
             - '.:/app'
-        depends_on:
-            - db
-            - redis
+        environment:
+            SERVER_NAME: 'http://:8000'
         networks:
-            - plv_network
+            - ${DOCKER_NETWORK:-plv_network}
+        depends_on:
+            init:
+                condition: service_completed_successfully
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
 
     db:
         image: 'postgres:18.1'
+        restart: unless-stopped
         environment:
             POSTGRES_DB: '${DB_DATABASE:-plv_saas}'
             POSTGRES_USER: '${DB_USERNAME:-sail}'
@@ -35,25 +37,32 @@ services:
         volumes:
             - './docker/pgsql:/var/lib/postgresql'
         networks:
-            - plv_network
+            - ${DOCKER_NETWORK:-plv_network}
         healthcheck:
-            test: ["CMD", "pg_isready", "-q", "-d", "${DB_DATABASE:-plv_saas}", "-U", "${DB_USERNAME:-sail}"]
-            retries: 3
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sail} -d ${DB_DATABASE:-plv_saas}"]
+            interval: 10s
             timeout: 5s
+            retries: 5
 
     redis:
         image: 'redis:8.4.0'
+        restart: unless-stopped
         volumes:
             - './docker/redis:/data'
+        command: redis-server --appendonly yes
         networks:
-            - plv_network
+            - ${DOCKER_NETWORK:-plv_network}
         healthcheck:
             test: ["CMD", "redis-cli", "ping"]
-            retries: 3
+            interval: 10s
             timeout: 5s
+            retries: 5
 
     reverb:
-        image: 'dunglas/frankenphp:php8.4'
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
         command: php artisan reverb:start --host="0.0.0.0" --port=8080
         environment:
             APP_KEY: '${APP_KEY:-base64:xgH1qY6U+d9wYY3xZ8J7sK/8j4n9l1k0m2o3p4q5r6s=}'
@@ -66,10 +75,26 @@ services:
         volumes:
             - '.:/app'
         networks:
-            - plv_network
+            - ${DOCKER_NETWORK:-plv_network}
         depends_on:
-            - redis
+            init:
+                condition: service_completed_successfully
+            redis:
+                condition: service_healthy
+    
+    vite:
+        image: 'node:24.12.0'
+        working_dir: /app
+        command: sh -c "npm install && npm run dev"
+        restart: unless-stopped
+        volumes:
+            - '.:/app'
+        networks:
+            - ${DOCKER_NETWORK:-plv_network}
+        environment:
+            VITE_HOST: '0.0.0.0'
 
 networks:
     plv_network:
         external: true
+        name: ${DOCKER_NETWORK:-plv_network}

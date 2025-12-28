@@ -1,6 +1,5 @@
 <script>
-    import { head } from "@inertiajs/svelte";
-
+    import { Link } from "@inertiajs/svelte";
     let { ...props } = $props();
 </script>
 
@@ -12,6 +11,15 @@
     class="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4"
 >
     <div class="max-w-xl w-full text-center space-y-8">
+        <!-- Logo -->
+        <div class="flex justify-center mb-6">
+            <img
+                src="/logo.png"
+                alt="Pro Loco Venticanese"
+                class="h-24 w-auto"
+            />
+        </div>
+
         <h1 class="text-4xl font-bold tracking-tight lg:text-5xl">
             Pro Loco Venticanese <span class="text-primary">Evolution</span>
         </h1>
@@ -30,11 +38,12 @@
                     46ª Fiera Campionaria
                 </p>
                 <div class="mt-4">
-                    <button
+                    <Link
+                        href="/login"
                         class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
                     >
                         Dettagli
-                    </button>
+                    </Link>
                 </div>
             </div>
 
@@ -46,11 +55,12 @@
                     Unisciti a noi per il nuovo anno.
                 </p>
                 <div class="mt-4">
-                    <button
+                    <Link
+                        href="/login"
                         class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full"
                     >
                         Accedi
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>
