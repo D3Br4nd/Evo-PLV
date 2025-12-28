@@ -63,6 +63,17 @@ return new class extends Migration
             
             $table->unique(['user_id', 'year']);
         });
+
+        // Projects Table
+        Schema::create('projects', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->string('status')->default('todo'); // todo, in_progress, done
+            $table->string('priority')->default('medium'); // low, medium, high
+            $table->foreignUuid('assignee_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -70,6 +81,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('projects');
         Schema::dropIfExists('memberships');
         Schema::dropIfExists('events');
         Schema::dropIfExists('sessions');

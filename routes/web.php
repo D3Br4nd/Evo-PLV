@@ -20,4 +20,8 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Admin/Dashboard');
     })->name('admin.dashboard');
+
+    Route::resource('members', \App\Http\Controllers\AdminMemberController::class);
+    Route::resource('events', \App\Http\Controllers\AdminEventController::class);
+    Route::resource('projects', \App\Http\Controllers\AdminProjectController::class);
 });
