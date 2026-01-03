@@ -1,6 +1,10 @@
 <script>
     import AdminLayout from "@/layouts/AdminLayout.svelte";
     import { router } from "@inertiajs/svelte";
+    import { Button } from "@/lib/components/ui/button";
+    import { Input } from "@/lib/components/ui/input";
+    import * as Card from "@/lib/components/ui/card";
+    import * as Table from "@/lib/components/ui/table";
 
     let { event, checkins, flash } = $props();
 
@@ -26,88 +30,85 @@
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-white">Check-in</h1>
-                <p class="text-sm text-zinc-400">
-                    Evento: <span class="text-white">{event.title}</span>
+                <h1 class="text-2xl font-bold">Check-in</h1>
+                <p class="text-sm text-muted-foreground">
+                    Evento: <span class="text-foreground">{event.title}</span>
                 </p>
             </div>
 
-            <a
-                class="text-sm text-zinc-300 hover:text-white underline"
+            <Button
+                variant="outline"
                 href={route("events.checkins.export", event.id)}
             >
                 Esporta CSV
-            </a>
+            </Button>
         </div>
 
-        <div class="rounded-md border border-zinc-800 bg-zinc-900/50 p-4 space-y-3">
-            <div class="text-sm text-zinc-300">
-                Inserisci il token QR (scanner in arrivo, intanto funziona anche incollando).
-            </div>
-
-            <div class="flex gap-2">
-                <input
-                    bind:value={qr_token}
-                    placeholder="qr_token..."
-                    class="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white font-mono text-xs"
-                    onkeydown={(e) => e.key === "Enter" && submit()}
-                />
-                <button
-                    onclick={submit}
-                    disabled={processing}
-                    class="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-200 transition text-sm font-medium disabled:opacity-50"
-                >
-                    Check-in
-                </button>
-            </div>
-
-            {#if flash?.error}
-                <div class="text-sm text-red-400">{flash.error}</div>
-            {/if}
-            {#if flash?.success}
-                <div class="text-sm text-green-400">{flash.success}</div>
-            {/if}
-        </div>
-
-        <div class="rounded-md border border-zinc-800 bg-zinc-900/50">
-            <div class="p-4 border-b border-zinc-800 flex items-center justify-between">
-                <h2 class="text-white font-semibold">Ultimi check-in</h2>
-                <div class="text-xs text-zinc-400">
-                    Totale: {checkins.total}
+        <Card.Root>
+            <Card.Header>
+                <Card.Title>Registra presenza</Card.Title>
+                <Card.Description>
+                    Inserisci il token QR (scanner in arrivo, intanto funziona anche incollando).
+                </Card.Description>
+            </Card.Header>
+            <Card.Content class="space-y-3">
+                <div class="flex gap-2">
+                    <Input
+                        bind:value={qr_token}
+                        placeholder="qr_token..."
+                        class="flex-1 font-mono text-xs"
+                        onkeydown={(e) => e.key === "Enter" && submit()}
+                    />
+                    <Button onclick={submit} disabled={processing}>
+                        Check-in
+                    </Button>
                 </div>
-            </div>
 
-            <div class="w-full overflow-auto">
-                <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-zinc-400 uppercase border-b border-zinc-800">
-                        <tr>
-                            <th class="px-6 py-3">Quando</th>
-                            <th class="px-6 py-3">Socio</th>
-                            <th class="px-6 py-3">Email</th>
-                            <th class="px-6 py-3">Operatore</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-800">
+                {#if flash?.error}
+                    <div class="text-sm text-destructive">{flash.error}</div>
+                {/if}
+                {#if flash?.success}
+                    <div class="text-sm text-green-600 dark:text-green-400">{flash.success}</div>
+                {/if}
+            </Card.Content>
+        </Card.Root>
+
+        <Card.Root>
+            <Card.Header class="flex-row items-center justify-between space-y-0">
+                <Card.Title class="text-base">Ultimi check-in</Card.Title>
+                <div class="text-xs text-muted-foreground">Totale: {checkins.total}</div>
+            </Card.Header>
+            <Card.Content class="p-0">
+                <Table.Root>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.Head>Quando</Table.Head>
+                            <Table.Head>Socio</Table.Head>
+                            <Table.Head>Email</Table.Head>
+                            <Table.Head>Operatore</Table.Head>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {#each checkins.data as c (c.id)}
-                            <tr class="hover:bg-zinc-900/80 transition">
-                                <td class="px-6 py-3 text-zinc-300">
+                            <Table.Row>
+                                <Table.Cell class="text-muted-foreground">
                                     {new Date(c.checked_in_at).toLocaleString("it-IT")}
-                                </td>
-                                <td class="px-6 py-3 text-white">
+                                </Table.Cell>
+                                <Table.Cell class="font-medium">
                                     {c.membership?.user?.name || "-"}
-                                </td>
-                                <td class="px-6 py-3 text-zinc-300">
+                                </Table.Cell>
+                                <Table.Cell class="text-muted-foreground">
                                     {c.membership?.user?.email || "-"}
-                                </td>
-                                <td class="px-6 py-3 text-zinc-300">
+                                </Table.Cell>
+                                <Table.Cell class="text-muted-foreground">
                                     {c.checked_in_by?.name || "-"}
-                                </td>
-                            </tr>
+                                </Table.Cell>
+                            </Table.Row>
                         {/each}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    </Table.Body>
+                </Table.Root>
+            </Card.Content>
+        </Card.Root>
     </div>
 </AdminLayout>
 

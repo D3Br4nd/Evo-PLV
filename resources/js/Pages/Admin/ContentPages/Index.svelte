@@ -1,6 +1,12 @@
 <script>
     import AdminLayout from "@/layouts/AdminLayout.svelte";
     import { router } from "@inertiajs/svelte";
+    import { Button } from "@/lib/components/ui/button";
+    import { Input } from "@/lib/components/ui/input";
+    import { Textarea } from "@/lib/components/ui/textarea";
+    import { Badge } from "@/lib/components/ui/badge";
+    import * as Card from "@/lib/components/ui/card";
+    import * as Table from "@/lib/components/ui/table";
 
     let { pages, flash } = $props();
 
@@ -59,9 +65,9 @@
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-white">Contenuti</h1>
+                <h1 class="text-2xl font-bold">Contenuti</h1>
                 <p class="text-sm text-zinc-400">
-                    Pagine pubbliche pubblicabili su `/p/{slug}`.
+                    Pagine pubbliche pubblicabili su <code>/p/{'{'}slug{'}'}</code>.
                 </p>
             </div>
             <button
@@ -73,115 +79,124 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="rounded-md border border-zinc-800 bg-zinc-900/50">
-                <div class="p-4 border-b border-zinc-800">
-                    <h2 class="text-white font-semibold">
-                        {editing ? "Modifica" : "Crea"} pagina
-                    </h2>
-                </div>
-                <div class="p-4 space-y-3">
-                    <div>
-                        <label class="block text-xs text-zinc-400 mb-1"
+            <Card.Root>
+                <Card.Header>
+                    <Card.Title>{editing ? "Modifica" : "Crea"} pagina</Card.Title>
+                    <Card.Description>
+                        Gestisci contenuti pubblici e bozze.
+                    </Card.Description>
+                </Card.Header>
+                <Card.Content class="space-y-3">
+                    <div class="space-y-1.5">
+                        <label for="cp-title" class="text-xs text-muted-foreground"
                             >Titolo</label
                         >
-                        <input
-                            bind:value={form.title}
-                            class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                        />
+                        <Input id="cp-title" bind:value={form.title} />
                     </div>
-                    <div>
-                        <label class="block text-xs text-zinc-400 mb-1"
+                    <div class="space-y-1.5">
+                        <label for="cp-slug" class="text-xs text-muted-foreground"
                             >Slug</label
                         >
-                        <input
+                        <Input
+                            id="cp-slug"
                             bind:value={form.slug}
                             placeholder="lascia vuoto per auto"
-                            class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white font-mono text-xs"
+                            class="font-mono text-xs"
                         />
                     </div>
-                    <div>
-                        <label class="block text-xs text-zinc-400 mb-1"
+                    <div class="space-y-1.5">
+                        <label
+                            for="cp-excerpt"
+                            class="text-xs text-muted-foreground"
                             >Excerpt</label
                         >
-                        <input
-                            bind:value={form.excerpt}
-                            class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                        />
+                        <Input id="cp-excerpt" bind:value={form.excerpt} />
                     </div>
-                    <div>
-                        <label class="block text-xs text-zinc-400 mb-1"
+                    <div class="space-y-1.5">
+                        <label for="cp-body" class="text-xs text-muted-foreground"
                             >Body</label
                         >
-                        <textarea
-                            bind:value={form.body}
-                            rows="10"
-                            class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                        ></textarea>
+                        <Textarea id="cp-body" bind:value={form.body} rows={10} />
                     </div>
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between gap-3">
                         <select
                             bind:value={form.status}
-                            class="bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
+                            class="h-10 rounded-md border border-input bg-background px-3 text-sm"
                         >
                             <option value="draft">Bozza</option>
                             <option value="published">Pubblicata</option>
                         </select>
-                        <button
-                            onclick={submit}
-                            disabled={processing}
-                            class="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-200 transition text-sm font-medium disabled:opacity-50"
-                        >
+                        <Button onclick={submit} disabled={processing}>
                             {processing ? "Salvataggio..." : "Salva"}
-                        </button>
+                        </Button>
                     </div>
 
                     {#if flash?.error}
-                        <div class="text-sm text-red-400">{flash.error}</div>
+                        <div class="text-sm text-destructive">{flash.error}</div>
                     {/if}
                     {#if flash?.success}
-                        <div class="text-sm text-green-400">{flash.success}</div>
-                    {/if}
-                </div>
-            </div>
-
-            <div class="rounded-md border border-zinc-800 bg-zinc-900/50">
-                <div class="p-4 border-b border-zinc-800">
-                    <h2 class="text-white font-semibold">Pagine</h2>
-                </div>
-                <div class="divide-y divide-zinc-800">
-                    {#each pages.data as p (p.id)}
-                        <div class="p-4 flex items-start justify-between gap-4">
-                            <div class="min-w-0">
-                                <div class="text-white font-medium truncate">
-                                    {p.title}
-                                </div>
-                                <div class="text-xs text-zinc-400 font-mono">
-                                    /p/{p.slug} • {p.status}
-                                </div>
-                                {#if p.excerpt}
-                                    <div class="text-sm text-zinc-300 mt-1">
-                                        {p.excerpt}
-                                    </div>
-                                {/if}
-                            </div>
-                            <div class="flex gap-3 shrink-0">
-                                <button
-                                    onclick={() => edit(p)}
-                                    class="text-sm text-zinc-300 hover:text-white underline"
-                                >
-                                    Modifica
-                                </button>
-                                <button
-                                    onclick={() => remove(p.id)}
-                                    class="text-sm text-red-400 hover:text-red-300 underline"
-                                >
-                                    Elimina
-                                </button>
-                            </div>
+                        <div class="text-sm text-green-600 dark:text-green-400">
+                            {flash.success}
                         </div>
-                    {/each}
-                </div>
-            </div>
+                    {/if}
+                </Card.Content>
+            </Card.Root>
+
+            <Card.Root>
+                <Card.Header>
+                    <Card.Title>Pagine</Card.Title>
+                    <Card.Description>Elenco contenuti e stato.</Card.Description>
+                </Card.Header>
+                <Card.Content class="p-0">
+                    <Table.Root>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.Head>Titolo</Table.Head>
+                                <Table.Head>Slug</Table.Head>
+                                <Table.Head>Stato</Table.Head>
+                                <Table.Head class="text-right">Azioni</Table.Head>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {#each pages.data as p (p.id)}
+                                <Table.Row>
+                                    <Table.Cell class="font-medium">
+                                        <div class="space-y-1">
+                                            <div class="truncate">{p.title}</div>
+                                            {#if p.excerpt}
+                                                <div class="text-xs text-muted-foreground truncate">
+                                                    {p.excerpt}
+                                                </div>
+                                            {/if}
+                                        </div>
+                                    </Table.Cell>
+                                    <Table.Cell class="font-mono text-xs text-muted-foreground">
+                                        /p/{p.slug}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {#if p.status === "published"}
+                                            <Badge>Pubblicata</Badge>
+                                        {:else}
+                                            <Badge variant="secondary">Bozza</Badge>
+                                        {/if}
+                                    </Table.Cell>
+                                    <Table.Cell class="text-right space-x-2">
+                                        <Button variant="outline" size="sm" onclick={() => edit(p)}
+                                            >Modifica</Button
+                                        >
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onclick={() => remove(p.id)}
+                                            >Elimina</Button
+                                        >
+                                    </Table.Cell>
+                                </Table.Row>
+                            {/each}
+                        </Table.Body>
+                    </Table.Root>
+                </Card.Content>
+            </Card.Root>
         </div>
     </div>
 </AdminLayout>

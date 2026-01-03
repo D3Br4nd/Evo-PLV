@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["resources/js/*"]
+    },
+    "types": ["vite/client"]
+  },
+  "exclude": ["node_modules", "public/build", "vendor", "storage"]
+}
+
+

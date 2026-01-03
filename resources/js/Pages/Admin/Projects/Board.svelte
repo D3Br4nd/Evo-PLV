@@ -2,6 +2,11 @@
     import AdminLayout from "@/layouts/AdminLayout.svelte";
     import { router } from "@inertiajs/svelte";
     import { untrack } from "svelte";
+    import { Button } from "@/lib/components/ui/button";
+    import { Input } from "@/lib/components/ui/input";
+    import { Badge } from "@/lib/components/ui/badge";
+    import * as Card from "@/lib/components/ui/card";
+    import * as Dialog from "@/lib/components/ui/dialog";
 
     let { projects } = $props();
 
@@ -12,17 +17,14 @@
         {
             id: "todo",
             title: "Da Fare",
-            color: "bg-zinc-800/50 border-zinc-700",
         },
         {
             id: "in_progress",
             title: "In Corso",
-            color: "bg-blue-900/10 border-blue-900/30",
         },
         {
             id: "done",
             title: "Completato",
-            color: "bg-green-900/10 border-green-900/30",
         },
     ];
 
@@ -110,48 +112,41 @@
         <!-- Header -->
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-white">
-                    Progetti
-                </h1>
+                <h1 class="text-3xl font-bold tracking-tight">Progetti</h1>
                 <p class="text-muted-foreground text-sm">
                     Organizza i task per gli eventi.
                 </p>
             </div>
-            <button
+            <Button
                 onclick={() => (isNewProjectOpen = true)}
-                class="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-200 transition text-sm font-medium"
                 aria-label="Nuovo Task"
             >
-                Nuovo Task +
-            </button>
+                Nuovo task
+            </Button>
         </div>
 
         <!-- Kanban Board -->
         <div class="flex-1 overflow-x-auto">
             <div class="flex h-full space-x-4 min-w-[800px]">
                 {#each columns as column}
-                    <div
-                        class="flex-1 flex flex-col rounded-lg border {column.color} p-4 max-w-sm"
+                    <Card.Root
+                        class="flex-1 flex flex-col max-w-sm"
                         ondragover={handleDragOver}
                         ondrop={(e) => handleDrop(e, column.id)}
                         role="region"
                         aria-label={column.title}
                     >
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-semibold text-zinc-200">
-                                {column.title}
-                            </h3>
-                            <span
-                                class="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400"
-                            >
+                        <Card.Header class="flex-row items-center justify-between space-y-0">
+                            <Card.Title class="text-base">{column.title}</Card.Title>
+                            <Badge variant="secondary">
                                 {getProjectsByStatus(column.id).length}
-                            </span>
-                        </div>
+                            </Badge>
+                        </Card.Header>
 
-                        <div class="flex-1 space-y-3 overflow-y-auto">
+                        <Card.Content class="flex-1 space-y-3 overflow-y-auto">
                             {#each getProjectsByStatus(column.id) as project (project.id)}
                                 <div
-                                    class="bg-zinc-900 border border-zinc-800 p-4 rounded-md shadow-sm cursor-move hover:border-zinc-700 transition group relative"
+                                    class="rounded-md border bg-card p-4 shadow-sm cursor-move hover:bg-accent/30 transition group relative"
                                     draggable="true"
                                     ondragstart={(e) =>
                                         handleDragStart(e, project.id)}
@@ -160,27 +155,16 @@
                                     <div
                                         class="flex justify-between items-start mb-2"
                                     >
-                                        <span
-                                            class="text-xs font-medium px-2 py-0.5 rounded
-                                            {project.priority === 'high'
-                                                ? 'bg-red-500/10 text-red-500'
-                                                : ''}
-                                            {project.priority === 'medium'
-                                                ? 'bg-yellow-500/10 text-yellow-500'
-                                                : ''}
-                                            {project.priority === 'low'
-                                                ? 'bg-blue-500/10 text-blue-500'
-                                                : ''}
-                                        "
-                                        >
-                                            {project.priority
-                                                .charAt(0)
-                                                .toUpperCase() +
-                                                project.priority.slice(1)}
-                                        </span>
+                                        {#if project.priority === "high"}
+                                            <Badge variant="destructive">Alta</Badge>
+                                        {:else if project.priority === "medium"}
+                                            <Badge variant="secondary">Media</Badge>
+                                        {:else}
+                                            <Badge variant="outline">Bassa</Badge>
+                                        {/if}
                                         {#if project.assignee}
                                             <div
-                                                class="h-6 w-6 rounded-full bg-zinc-800 text-[10px] flex items-center justify-center text-zinc-300"
+                                                class="h-6 w-6 rounded-full bg-secondary text-secondary-foreground text-[10px] flex items-center justify-center"
                                                 title={project.assignee.name}
                                             >
                                                 {project.assignee.name.charAt(
@@ -190,15 +174,17 @@
                                         {/if}
                                     </div>
                                     <h4
-                                        class="text-sm font-medium text-white mb-2"
+                                        class="text-sm font-medium mb-2"
                                     >
                                         {project.title}
                                     </h4>
                                     <div
                                         class="flex justify-end opacity-0 group-hover:opacity-100 transition"
                                     >
-                                        <button
-                                            class="text-zinc-500 hover:text-red-400"
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            class="text-destructive hover:text-destructive"
                                             aria-label="Elimina Task"
                                             onclick={() => {
                                                 if (confirm("Eliminare?"))
@@ -210,99 +196,47 @@
                                                     );
                                             }}
                                         >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                class="lucide lucide-trash-2"
-                                                ><path d="M3 6h18" /><path
-                                                    d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
-                                                /><path
-                                                    d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
-                                                /><line
-                                                    x1="10"
-                                                    x2="10"
-                                                    y1="11"
-                                                    y2="17"
-                                                /><line
-                                                    x1="14"
-                                                    x2="14"
-                                                    y1="11"
-                                                    y2="17"
-                                                /></svg
-                                            >
-                                        </button>
+                                            Elimina
+                                        </Button>
                                     </div>
                                 </div>
                             {/each}
-                        </div>
-                    </div>
+                        </Card.Content>
+                    </Card.Root>
                 {/each}
             </div>
         </div>
     </div>
 
-    <!-- New Project Dialog -->
-    {#if isNewProjectOpen}
-        <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        >
-            <div
-                class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg shadow-xl w-full max-w-md space-y-4"
-            >
-                <h2 class="text-xl font-bold text-white">Nuovo Task</h2>
+    <Dialog.Root bind:open={isNewProjectOpen}>
+        <Dialog.Content class="max-w-md">
+            <Dialog.Header>
+                <Dialog.Title>Nuovo task</Dialog.Title>
+                <Dialog.Description>Crea una nuova attività.</Dialog.Description>
+            </Dialog.Header>
 
-                <div class="space-y-3">
-                    <div>
-                        <label class="block">
-                            <span class="text-xs text-zinc-400 mb-1"
-                                >Titolo</span
-                            >
-                            <input
-                                bind:value={newProjectForm.title}
-                                type="text"
-                                class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                            />
-                        </label>
-                    </div>
-                    <div>
-                        <label class="block">
-                            <span class="text-xs text-zinc-400 mb-1"
-                                >Priorità</span
-                            >
-                            <select
-                                bind:value={newProjectForm.priority}
-                                class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                            >
-                                <option value="low">Bassa</option>
-                                <option value="medium">Media</option>
-                                <option value="high">Alta</option>
-                            </select>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button
-                        onclick={() => (isNewProjectOpen = false)}
-                        class="px-4 py-2 text-sm text-zinc-400 hover:text-white"
-                        >Annulla</button
-                    >
-                    <button
-                        onclick={createProject}
-                        disabled={processing}
-                        class="px-4 py-2 text-sm bg-white text-black font-medium rounded hover:bg-gray-200 disabled:opacity-50"
-                    >
-                        {processing ? "Salvataggio..." : "Crea Task"}
-                    </button>
-                </div>
+            <div class="mt-4 space-y-3">
+                <Input bind:value={newProjectForm.title} placeholder="Titolo" />
+                <select
+                    bind:value={newProjectForm.priority}
+                    class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                    <option value="low">Bassa</option>
+                    <option value="medium">Media</option>
+                    <option value="high">Alta</option>
+                </select>
             </div>
-        </div>
-    {/if}
+
+            <Dialog.Footer class="mt-6">
+                <Dialog.Close>
+                    {#snippet child({ props })}
+                        <Button {...props} variant="outline">Annulla</Button>
+                    {/snippet}
+                </Dialog.Close>
+                <Button onclick={createProject} disabled={processing}>
+                    {processing ? "Salvataggio..." : "Crea"}
+                </Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
 </AdminLayout>

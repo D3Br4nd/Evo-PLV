@@ -46,13 +46,13 @@ FORCE_HTTPS=false
 APP_KEY=
 
 DB_CONNECTION=pgsql
-DB_HOST=db
+DB_HOST=plv_saas_db
 DB_PORT=5432
 DB_DATABASE=plv_saas
 DB_USERNAME=sail
 DB_PASSWORD=password
 
-REDIS_HOST=redis
+REDIS_HOST=plv_saas_redis
 REDIS_PORT=6379
 
 REVERB_APP_ID=plv
@@ -106,10 +106,26 @@ Una volta che i container sono attivi (verifica con `docker compose ps`), esegui
 docker compose exec app php artisan migrate:fresh --seed
 ```
 
+### 4b. Bootstrap SuperAdmin (Produzione)
+
+Imposta queste variabili nel tuo `.env`:
+
+- `SUPERADMIN_NAME`
+- `SUPERADMIN_EMAIL`
+- `SUPERADMIN_PASSWORD`
+
+Poi esegui:
+
+```bash
+docker compose exec app php artisan plv:bootstrap-superadmin
+```
+
+> Template: vedi `env.example.template` (usa valori placeholder, non copiarlo “as-is” in produzione).
+
 ### 5. Accesso
 
 - **Web App**: [http://localhost:8000](http://localhost:8000)
-- **Admin Login**: `admin@prolocoventicanese.it` / `password`
+- **Admin Login**: usa le credenziali `SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD` dopo il bootstrap
 - **Tessera socio (PWA)**: dopo login come socio → `/me/card`
 
 ---

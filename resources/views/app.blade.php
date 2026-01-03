@@ -13,6 +13,18 @@
         
         <link rel="icon" type="image/png" href="/favicon.png">
 
+        <script>
+            (function () {
+                try {
+                    const key = "plv_theme";
+                    const stored = localStorage.getItem(key);
+                    const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+                    const theme = stored || (systemDark ? "dark" : "light");
+                    document.documentElement.classList.toggle("dark", theme === "dark");
+                } catch (e) {}
+            })();
+        </script>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>

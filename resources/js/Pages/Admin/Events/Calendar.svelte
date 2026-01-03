@@ -2,6 +2,13 @@
     import AdminLayout from "@/layouts/AdminLayout.svelte";
     import { router } from "@inertiajs/svelte";
     import { onMount } from "svelte";
+    import ChevronLeft from "lucide-svelte/icons/chevron-left";
+    import ChevronRight from "lucide-svelte/icons/chevron-right";
+    import { Button } from "@/lib/components/ui/button";
+    import { Input } from "@/lib/components/ui/input";
+    import { Badge } from "@/lib/components/ui/badge";
+    import * as Card from "@/lib/components/ui/card";
+    import * as Dialog from "@/lib/components/ui/dialog";
 
     let { events, currentDate } = $props();
 
@@ -69,6 +76,7 @@
     // Dialog State
     let isNewEventOpen = $state(false);
     let isEditEventOpen = $state(false);
+    let isDialogOpen = $state(false);
     let selectedEvent = $state(null);
     let loading = $state(false);
 
@@ -91,6 +99,8 @@
             type: "fair",
         };
         isNewEventOpen = true;
+        isEditEventOpen = false;
+        isDialogOpen = true;
     }
 
     function openEditEvent(event, e) {
@@ -104,13 +114,23 @@
             type: event.type,
         };
         isEditEventOpen = true;
+        isNewEventOpen = false;
+        isDialogOpen = true;
     }
 
     function closeDialogs() {
         isNewEventOpen = false;
         isEditEventOpen = false;
+        isDialogOpen = false;
         selectedEvent = null;
     }
+
+    // If the dialog is closed via overlay/escape, keep flags in sync.
+    $effect(() => {
+        if (!isDialogOpen && (isNewEventOpen || isEditEventOpen)) {
+            closeDialogs();
+        }
+    });
 
     function submitEvent() {
         loading = true;
@@ -150,70 +170,41 @@
     <div class="h-full flex flex-col space-y-4">
         <!-- Header -->
         <div class="flex items-center justify-between">
-            <h1
-                class="text-3xl font-bold tracking-tight text-white flex items-center space-x-4"
-            >
-                <button
+            <div class="flex items-center gap-3">
+                <Button
+                    variant="outline"
+                    size="icon"
                     onclick={previousMonth}
-                    class="p-1 hover:bg-zinc-800 rounded"
                     aria-label="Mese precedente"
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="lucide lucide-chevron-left"
-                        ><path d="m15 18-6-6 6-6" /></svg
-                    >
-                </button>
-                <span class="capitalize"
-                    >{current.toLocaleString("it-IT", {
+                    <ChevronLeft />
+                </Button>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight capitalize">
+                    {current.toLocaleString("it-IT", {
                         month: "long",
                         year: "numeric",
-                    })}</span
-                >
-                <button
+                    })}
+                </h1>
+                <Button
+                    variant="outline"
+                    size="icon"
                     onclick={nextMonth}
-                    class="p-1 hover:bg-zinc-800 rounded"
                     aria-label="Mese successivo"
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="lucide lucide-chevron-right"
-                        ><path d="m9 18 6-6-6-6" /></svg
-                    >
-                </button>
-            </h1>
-            <button
-                onclick={() => openNewEvent(new Date())}
-                class="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-200 transition text-sm font-medium"
-            >
-                Nuovo Evento +
-            </button>
+                    <ChevronRight />
+                </Button>
+            </div>
+            <Button onclick={() => openNewEvent(new Date())}>Nuovo evento</Button>
         </div>
 
         <!-- Calendar Grid -->
         <div
-            class="grid grid-cols-7 gap-px bg-zinc-800 border border-zinc-800 rounded-lg overflow-hidden flex-1"
+            class="grid grid-cols-7 gap-px bg-border border border-border rounded-lg overflow-hidden flex-1"
         >
             <!-- Weekday Headers -->
             {#each ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"] as day}
                 <div
-                    class="bg-zinc-900 py-2 text-center text-xs font-semibold text-zinc-400"
+                    class="bg-card py-2 text-center text-xs font-semibold text-muted-foreground"
                 >
                     {day}
                 </div>
@@ -222,7 +213,7 @@
             <!-- Days -->
             {#each days as date}
                 <div
-                    class="bg-zinc-950 min-h-[120px] p-2 relative group hover:bg-zinc-900/50 transition cursor-pointer"
+                    class="bg-background min-h-[120px] p-2 relative group hover:bg-accent/40 transition cursor-pointer"
                     onclick={() => openNewEvent(date)}
                     role="button"
                     tabindex="0"
@@ -232,8 +223,8 @@
                         <span
                             class="text-sm font-medium {date.toDateString() ===
                             new Date().toDateString()
-                                ? 'bg-white text-black rounded-full w-6 h-6 flex items-center justify-center'
-                                : 'text-zinc-400'}"
+                                ? 'bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center'
+                                : 'text-muted-foreground'}"
                         >
                             {date.getDate()}
                         </span>
@@ -242,17 +233,7 @@
                         <div class="mt-2 space-y-1">
                             {#each getEventsForDay(date) as event}
                                 <div
-                                    class="text-xs px-2 py-1 rounded truncate cursor-pointer transition select-none
-                                    {event.type === 'fair'
-                                        ? 'bg-white text-black font-bold'
-                                        : ''}
-                                    {event.type === 'festival'
-                                        ? 'bg-zinc-800 text-white border border-zinc-700'
-                                        : ''}
-                                    {event.type === 'meeting'
-                                        ? 'border border-zinc-600 text-zinc-400'
-                                        : ''}
-                                    "
+                                    class="truncate cursor-pointer select-none"
                                     onclick={(e) => openEditEvent(event, e)}
                                     role="button"
                                     tabindex="0"
@@ -260,7 +241,13 @@
                                         e.key === "Enter" &&
                                         openEditEvent(event, e)}
                                 >
-                                    {event.title}
+                                    {#if event.type === "fair"}
+                                        <Badge>{event.title}</Badge>
+                                    {:else if event.type === "festival"}
+                                        <Badge variant="secondary">{event.title}</Badge>
+                                    {:else}
+                                        <Badge variant="outline">{event.title}</Badge>
+                                    {/if}
                                 </div>
                             {/each}
                         </div>
@@ -271,106 +258,67 @@
     </div>
 
     <!-- Dialog (Merged Create/Edit) -->
-    {#if isNewEventOpen || isEditEventOpen}
-        <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        >
-            <div
-                class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg shadow-xl w-full max-w-md space-y-4"
-            >
-                <h2 class="text-xl font-bold text-white">
-                    {isEditEventOpen ? "Modifica Evento" : "Nuovo Evento"}
-                </h2>
+    <Dialog.Root
+        bind:open={isDialogOpen}
+    >
+        <Dialog.Content class="max-w-md">
+            <Dialog.Header>
+                <Dialog.Title>
+                    {isEditEventOpen ? "Modifica evento" : "Nuovo evento"}
+                </Dialog.Title>
+                <Dialog.Description>Inserisci i dettagli base.</Dialog.Description>
+            </Dialog.Header>
 
-                <div class="space-y-3">
-                    <div>
-                        <label class="block">
-                            <span class="text-xs text-zinc-400 mb-1"
-                                >Titolo</span
-                            >
-                            <input
-                                bind:value={eventForm.title}
-                                type="text"
-                                class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                            />
-                        </label>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block">
-                                <span class="text-xs text-zinc-400 mb-1"
-                                    >Inizio</span
-                                >
-                                <input
-                                    bind:value={eventForm.start_date}
-                                    type="date"
-                                    class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                                />
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block">
-                                <span class="text-xs text-zinc-400 mb-1"
-                                    >Fine</span
-                                >
-                                <input
-                                    bind:value={eventForm.end_date}
-                                    type="date"
-                                    class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                                />
-                            </label>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block">
-                            <span class="text-xs text-zinc-400 mb-1">Tipo</span>
-                            <select
-                                bind:value={eventForm.type}
-                                class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-white"
-                            >
-                                <option value="fair">Fiera</option>
-                                <option value="festival">Sagra/Festival</option>
-                                <option value="meeting">Riunione</option>
-                            </select>
-                        </label>
-                    </div>
+            <div class="mt-4 space-y-3">
+                <Input bind:value={eventForm.title} placeholder="Titolo" />
+                <div class="grid grid-cols-2 gap-2">
+                    <Input bind:value={eventForm.start_date} type="date" />
+                    <Input bind:value={eventForm.end_date} type="date" />
                 </div>
-
-                <div class="flex justify-between pt-2">
-                    {#if isEditEventOpen}
-                        <button
-                            onclick={deleteEvent}
-                            type="button"
-                            class="text-red-500 text-sm hover:underline"
-                            >Elimina</button
-                        >
-                    {:else}
-                        <div></div>
-                    {/if}
-                    <div class="flex space-x-2">
-                        {#if isEditEventOpen && selectedEvent}
-                            <a
-                                class="px-4 py-2 text-sm text-zinc-300 hover:text-white underline"
-                                href={route("events.checkins.index", selectedEvent.id)}
-                            >
-                                Check-in
-                            </a>
-                        {/if}
-                        <button
-                            onclick={closeDialogs}
-                            class="px-4 py-2 text-sm text-zinc-400 hover:text-white"
-                            >Annulla</button
-                        >
-                        <button
-                            onclick={submitEvent}
-                            disabled={loading}
-                            class="px-4 py-2 text-sm bg-white text-black font-medium rounded hover:bg-gray-200 disabled:opacity-50"
-                        >
-                            {loading ? "Salvataggio..." : "Salva"}
-                        </button>
-                    </div>
-                </div>
+                <select
+                    bind:value={eventForm.type}
+                    class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                    <option value="fair">Fiera</option>
+                    <option value="festival">Sagra/Festival</option>
+                    <option value="meeting">Riunione</option>
+                </select>
             </div>
-        </div>
-    {/if}
+
+            <Dialog.Footer class="mt-6 justify-between sm:justify-between">
+                {#if isEditEventOpen}
+                    <Button
+                        variant="destructive"
+                        onclick={deleteEvent}
+                        disabled={loading}
+                    >
+                        Elimina
+                    </Button>
+                {:else}
+                    <div></div>
+                {/if}
+
+                <div class="flex gap-2">
+                    {#if isEditEventOpen && selectedEvent}
+                        <Button
+                            variant="outline"
+                            href={route("events.checkins.index", selectedEvent.id)}
+                        >
+                            Check-in
+                        </Button>
+                    {/if}
+                    <Dialog.Close>
+                        {#snippet child({ props })}
+                            <Button {...props} variant="outline" disabled={loading}
+                                >Annulla</Button
+                            >
+                        {/snippet}
+                    </Dialog.Close>
+                    <Button onclick={submitEvent} disabled={loading}>
+                        {loading ? "Salvataggio..." : "Salva"}
+                    </Button>
+                </div>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
 </AdminLayout>

@@ -26,6 +26,9 @@ services:
             - .env
         environment:
             SERVER_NAME: 'http://:8000'
+            # Use unique container names on the shared `plv_network` to avoid DNS collisions (e.g. other stacks also using `db` / `redis`).
+            DB_HOST: plv_saas_db
+            REDIS_HOST: plv_saas_redis
         networks:
             - plv_network
         depends_on:
@@ -89,6 +92,7 @@ services:
             REVERB_HOST: "0.0.0.0"
             REVERB_PORT: 8080
             REVERB_SCHEME: "http"
+            REDIS_HOST: plv_saas_redis
         volumes:
             - './docker/storage:/app/storage'
         networks:
