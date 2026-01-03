@@ -67,7 +67,6 @@ DB_PORT_FORWARD=5432
 REDIS_PORT_FORWARD=6379
 REVERB_PORT_FORWARD=8080
 VITE_PORT_FORWARD=5173
-DOCKER_NETWORK_DRIVER=bridge
 EOF
 ```
 
@@ -88,6 +87,9 @@ docker run --rm -v $(pwd):/app -w /app node:24-alpine npm install
 Compila gli asset e avvia i container:
 
 ```bash
+# Rete Docker condivisa (Nginx Proxy Manager, ecc.)
+docker network create plv_network || true
+
 # Build degli asset frontend
 docker run --rm -v $(pwd):/app -w /app node:24-alpine npm run build
 
