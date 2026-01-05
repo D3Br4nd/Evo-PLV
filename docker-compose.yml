@@ -1,7 +1,7 @@
 services:
     init:
         image: alpine:latest
-        container_name: plv_saas_init
+        container_name: plv_evo_init
         command: >
             sh -c "mkdir -p /data/pgsql /data/redis /data/storage/app/public /data/storage/framework/cache /data/storage/framework/sessions /data/storage/framework/views /data/storage/logs &&
                    chmod -R 777 /data"
@@ -15,7 +15,7 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-        container_name: plv_saas_app
+        container_name: plv_evo_app
         restart: unless-stopped
         # ports:
         #     - "${APP_PORT:-8000}:8000" # enable only if you want to expose to host
@@ -27,8 +27,8 @@ services:
         environment:
             SERVER_NAME: 'http://:8000'
             # Use unique container names on the shared `plv_network` to avoid DNS collisions (e.g. other stacks also using `db` / `redis`).
-            DB_HOST: plv_saas_db
-            REDIS_HOST: plv_saas_redis
+            DB_HOST: plv_evo_db
+            REDIS_HOST: plv_evo_redis
         networks:
             - plv_network
         depends_on:
@@ -41,12 +41,12 @@ services:
 
     db:
         image: 'postgres:18.1'
-        container_name: plv_saas_db
+        container_name: plv_evo_db
         restart: unless-stopped
         # ports:
         #     - "${DB_PORT_FORWARD:-5432}:5432" # enable only if you want to connect from host
         environment:
-            POSTGRES_DB: '${DB_DATABASE:-plv_saas}'
+            POSTGRES_DB: '${DB_DATABASE:-plv_evo}'
             POSTGRES_USER: '${DB_USERNAME:-sail}'
             POSTGRES_PASSWORD: '${DB_PASSWORD:-password}'
         volumes:
@@ -55,14 +55,14 @@ services:
         networks:
             - plv_network
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sail} -d ${DB_DATABASE:-plv_saas}"]
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sail} -d ${DB_DATABASE:-plv_evo}"]
             interval: 10s
             timeout: 5s
             retries: 5
 
     redis:
         image: 'redis:8.4.0'
-        container_name: plv_saas_redis
+        container_name: plv_evo_redis
         restart: unless-stopped
         # ports:
         #     - "${REDIS_PORT_FORWARD:-6379}:6379" # enable only if you want to connect from host
@@ -81,7 +81,7 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-        container_name: plv_saas_reverb
+        container_name: plv_evo_reverb
         restart: unless-stopped
         command: php artisan reverb:start --host="0.0.0.0" --port=8080
         # ports:
@@ -92,7 +92,7 @@ services:
             REVERB_HOST: "0.0.0.0"
             REVERB_PORT: 8080
             REVERB_SCHEME: "http"
-            REDIS_HOST: plv_saas_redis
+            REDIS_HOST: plv_evo_redis
         volumes:
             - './docker/storage:/app/storage'
         networks:
@@ -111,7 +111,7 @@ services:
     
     vite:
         image: 'node:24.12.0'
-        container_name: plv_saas_vite
+        container_name: plv_evo_vite
         profiles: ["dev"]
         working_dir: /app
         command: sh -c "npm install && npm run dev"

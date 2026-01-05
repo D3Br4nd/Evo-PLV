@@ -29,8 +29,8 @@ Segui questi passaggi per avviare il progetto da zero su una nuova macchina.
 Clona il repository ed entra nella cartella:
 
 ```bash
-git clone <repository-url> plv_saas
-cd plv_saas
+git clone <repository-url> plv_evo
+cd plv_evo
 ```
 
 Crea il file `.env` (esempio minimo):
@@ -46,13 +46,13 @@ FORCE_HTTPS=false
 APP_KEY=
 
 DB_CONNECTION=pgsql
-DB_HOST=plv_saas_db
+DB_HOST=plv_evo_db
 DB_PORT=5432
-DB_DATABASE=plv_saas
+DB_DATABASE=plv_evo
 DB_USERNAME=sail
 DB_PASSWORD=password
 
-REDIS_HOST=plv_saas_redis
+REDIS_HOST=plv_evo_redis
 REDIS_PORT=6379
 
 REVERB_APP_ID=plv
@@ -155,7 +155,7 @@ docker compose restart
 ## 📁 Struttura Progetto
 
 ```
-plv_saas/
+plv_evo/
 ├── app/
 │   ├── Models/         # User, Event, Membership, Project (UUIDv7)
 ├── database/
