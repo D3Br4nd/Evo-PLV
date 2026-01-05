@@ -1,4 +1,5 @@
 <script>
+    /* eslint-disable */
     import { router, inertia } from "@inertiajs/svelte";
     import AdminLayout from "@/layouts/AdminLayout.svelte";
     import { page } from "@inertiajs/svelte";
@@ -18,6 +19,15 @@
     let isDeleteMemberOpen = $state(false);
     let deleteConfirmationUserId = $state(null);
     let processing = $state(false);
+
+    function isActiveByExpiry(user) {
+        if (!user?.plv_expires_at) return false;
+        const d = new Date(user.plv_expires_at);
+        if (Number.isNaN(d.getTime())) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return d >= today;
+    }
 
     // Keep local search input in sync with server-provided filters (Inertia reactive props).
     $effect(() => {
@@ -169,7 +179,7 @@
                                     {user.id.substring(0, 8)}…
                                 </Table.Cell>
                                 <Table.Cell>
-                                    {#if user.memberships && user.memberships.length > 0}
+                                    {#if isActiveByExpiry(user) || (user.memberships && user.memberships.length > 0)}
                                         <Badge variant="secondary">Attivo</Badge>
                                     {:else}
                                         <Badge variant="outline">Scaduto</Badge>
@@ -193,6 +203,14 @@
                                     {/if}
                                 </Table.Cell>
                                 <Table.Cell class="text-right">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onclick={() => router.get(`/admin/members/${user.id}`)}
+                                        class="mr-2"
+                                    >
+                                        Apri
+                                    </Button>
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -275,11 +293,9 @@
             </div>
 
             <Dialog.Footer class="mt-6">
-                <Dialog.Close>
-                    {#snippet child({ props })}
-                        <Button {...props} variant="outline">Annulla</Button>
-                    {/snippet}
-                </Dialog.Close>
+                <Button variant="outline" onclick={closeNewMemberModal} disabled={processing}>
+                    Annulla
+                </Button>
                 <Button onclick={createMember} disabled={processing}>
                     {processing ? "Salvataggio..." : "Crea"}
                 </Button>
@@ -297,11 +313,9 @@
             </Dialog.Header>
 
             <Dialog.Footer class="mt-6">
-                <Dialog.Close>
-                    {#snippet child({ props })}
-                        <Button {...props} variant="outline">Annulla</Button>
-                    {/snippet}
-                </Dialog.Close>
+                <Button variant="outline" onclick={closeDeleteModal} disabled={processing}>
+                    Annulla
+                </Button>
                 <Button variant="destructive" onclick={deleteMember} disabled={processing}>
                     {processing ? "Eliminazione..." : "Elimina"}
                 </Button>

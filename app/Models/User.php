@@ -20,10 +20,27 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'role',
         'membership_status',
+        'birth_date',
+        'birth_place_type',
+        'birth_province_code',
+        'birth_city',
+        'birth_country',
+        'residence_type',
+        'residence_street',
+        'residence_house_number',
+        'residence_locality',
+        'residence_province_code',
+        'residence_city',
+        'residence_country',
+        'plv_joined_at',
+        'plv_expires_at',
+        'phone',
     ];
 
     /**
@@ -46,6 +63,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'birth_date' => 'date',
+            'plv_joined_at' => 'date',
+            'plv_expires_at' => 'date',
         ];
     }
     

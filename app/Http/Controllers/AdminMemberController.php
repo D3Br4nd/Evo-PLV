@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -33,6 +34,23 @@ class AdminMemberController extends Controller
         return Inertia::render('Admin/Members/Index', [
             'users' => $query->paginate(20)->withQueryString(),
             'filters' => $request->only(['search']),
+            'year' => $year,
+        ]);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Request $request, User $member)
+    {
+        $year = (int) $request->input('year', now()->year);
+
+        $member->load([
+            'memberships' => fn($q) => $q->where('year', $year),
+        ]);
+
+        return Inertia::render('Admin/Members/Show', [
+            'member' => $member,
             'year' => $year,
         ]);
     }
@@ -69,13 +87,40 @@ class AdminMemberController extends Controller
     public function update(Request $request, User $member)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($member->id)],
-            'role' => 'required|string|in:super_admin,direzione,segreteria,member',
+            'name' => 'sometimes|required|string|max:255',
+            'first_name' => 'sometimes|nullable|string|max:255',
+            'last_name' => 'sometimes|nullable|string|max:255',
+            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($member->id)],
+            'phone' => 'sometimes|nullable|string|max:50',
+
+            'birth_date' => 'sometimes|nullable|date',
+            'birth_place_type' => 'sometimes|nullable|string|in:it,foreign',
+            'birth_province_code' => 'sometimes|nullable|string|size:2',
+            'birth_city' => 'sometimes|nullable|string|max:255',
+            'birth_country' => 'sometimes|nullable|string|max:255',
+
+            'residence_type' => 'sometimes|nullable|string|in:it,foreign',
+            'residence_street' => 'sometimes|nullable|string|max:255',
+            'residence_house_number' => 'sometimes|nullable|string|max:50',
+            'residence_locality' => 'sometimes|nullable|string|max:255',
+            'residence_province_code' => 'sometimes|nullable|string|size:2',
+            'residence_city' => 'sometimes|nullable|string|max:255',
+            'residence_country' => 'sometimes|nullable|string|max:255',
+
+            'plv_joined_at' => 'sometimes|nullable|date',
+            // plv_expires_at is computed server-side from plv_joined_at (1 year)
+
+            'role' => 'sometimes|required|string|in:super_admin,direzione,segreteria,member',
         ]);
 
-        if ($validated['role'] !== $member->role) {
+        if (array_key_exists('role', $validated) && $validated['role'] !== $member->role) {
             $this->authorize('manage-roles');
+        }
+
+        if (array_key_exists('plv_joined_at', $validated)) {
+            $validated['plv_expires_at'] = $validated['plv_joined_at']
+                ? Carbon::parse($validated['plv_joined_at'])->addYear()->toDateString()
+                : null;
         }
 
         $member->update($validated);

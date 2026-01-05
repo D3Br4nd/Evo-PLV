@@ -1,0 +1,383 @@
+<script>
+    /* eslint-disable no-undef */
+    import { page } from "@inertiajs/svelte";
+    import { router } from "@inertiajs/svelte";
+    import QRCode from "qrcode";
+
+    import AdminLayout from "@/layouts/AdminLayout.svelte";
+    import { Button } from "@/lib/components/ui/button";
+    import { Input } from "@/lib/components/ui/input";
+    import * as Card from "@/lib/components/ui/card";
+
+    import italyPlaces from "@/data/italy_places.json";
+
+    let { member, year } = $props();
+    let flash = $derived($page.props.flash);
+    let errors = $derived($page.props.errors || {});
+
+    let uuid = $derived(member?.id);
+    let qrDataUrl = $state(null);
+
+    function dateOnly(v) {
+        if (!v) return "";
+        if (typeof v !== "string") return "";
+        // Handles both "YYYY-MM-DD" and ISO strings like "YYYY-MM-DDT00:00:00.000000Z"
+        return v.length >= 10 ? v.slice(0, 10) : v;
+    }
+
+    async function generateQr() {
+        if (!uuid) return;
+        qrDataUrl = await QRCode.toDataURL(uuid, {
+            width: 220,
+            margin: 2,
+            color: { dark: "#000000", light: "#FFFFFF" },
+        });
+    }
+
+    $effect(() => {
+        generateQr();
+    });
+
+    let form = $state({
+        name: "",
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone: "",
+
+        birth_date: "",
+        birth_place_type: "it",
+        birth_province_code: "",
+        birth_city: "",
+        birth_country: "",
+
+        residence_type: "it",
+        residence_street: "",
+        residence_house_number: "",
+        residence_locality: "",
+        residence_province_code: "",
+        residence_city: "",
+        residence_country: "",
+
+        plv_joined_at: "",
+    });
+
+    // Sync form from server-provided member.
+    // Do NOT overwrite local input if there are validation errors.
+    $effect(() => {
+        if (!member?.id) return;
+        if (Object.keys(errors).length > 0) return;
+
+        form.name = member?.name ?? "";
+        form.first_name = member?.first_name ?? "";
+        form.last_name = member?.last_name ?? "";
+        form.email = member?.email ?? "";
+        form.phone = member?.phone ?? "";
+
+        form.birth_date = dateOnly(member?.birth_date ?? "");
+        form.birth_place_type = member?.birth_place_type ?? "it";
+        form.birth_province_code = member?.birth_province_code ?? "";
+        form.birth_city = member?.birth_city ?? "";
+        form.birth_country = member?.birth_country ?? "";
+
+        form.residence_type = member?.residence_type ?? "it";
+        form.residence_street = member?.residence_street ?? "";
+        form.residence_house_number = member?.residence_house_number ?? "";
+        form.residence_locality = member?.residence_locality ?? "";
+        form.residence_province_code = member?.residence_province_code ?? "";
+        form.residence_city = member?.residence_city ?? "";
+        form.residence_country = member?.residence_country ?? "";
+
+        form.plv_joined_at = dateOnly(member?.plv_joined_at ?? "");
+    });
+
+    function addOneYear(dateStr) {
+        if (!dateStr) return "";
+        const d = new Date(dateStr + "T00:00:00");
+        if (Number.isNaN(d.getTime())) return "";
+        d.setFullYear(d.getFullYear() + 1);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    let expiresPreview = $derived(addOneYear(form.plv_joined_at));
+
+    let citiesForBirthProvince = $derived(
+        italyPlaces.citiesByProvince?.[form.birth_province_code] ?? [],
+    );
+    let citiesForResidenceProvince = $derived(
+        italyPlaces.citiesByProvince?.[form.residence_province_code] ?? [],
+    );
+
+    function save() {
+        router.patch(`/admin/members/${member.id}`, form, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    }
+</script>
+
+<AdminLayout title="Scheda socio">
+    <div class="space-y-6">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">Scheda socio</h1>
+                <p class="text-muted-foreground text-sm">
+                    Anno tessera: {year}
+                </p>
+            </div>
+
+            <div class="flex gap-2">
+                <Button variant="outline" onclick={() => router.get("/admin/members")}>
+                    Torna all’elenco
+                </Button>
+                <Button onclick={save}>Salva</Button>
+            </div>
+        </div>
+
+        {#if flash?.success}
+            <div class="text-sm text-green-600 dark:text-green-400">{flash.success}</div>
+        {/if}
+        {#if flash?.error}
+            <div class="text-sm text-destructive">{flash.error}</div>
+        {/if}
+
+        <div class="grid gap-6 lg:grid-cols-3">
+            <Card.Root class="lg:col-span-1">
+                <Card.Header>
+                    <Card.Title>UUID + QR</Card.Title>
+                    <Card.Description>
+                        QRCode dell’UUID del socio (per lettori/PWA).
+                    </Card.Description>
+                </Card.Header>
+                <Card.Content class="space-y-4">
+                    <div class="text-xs font-mono break-all">{uuid}</div>
+
+                    <div class="flex justify-center">
+                        {#if qrDataUrl}
+                            <img
+                                src={qrDataUrl}
+                                alt="QR UUID"
+                                class="rounded bg-white p-2"
+                            />
+                        {:else}
+                            <div class="text-sm text-muted-foreground">Generazione QR...</div>
+                        {/if}
+                    </div>
+                </Card.Content>
+            </Card.Root>
+
+            <div class="space-y-6 lg:col-span-2">
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Dati personali</Card.Title>
+                    </Card.Header>
+                    <Card.Content class="space-y-4">
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">Nome</div>
+                                <Input bind:value={form.first_name} placeholder="Nome" />
+                            </div>
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">Cognome</div>
+                                <Input bind:value={form.last_name} placeholder="Cognome" />
+                            </div>
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">Data di nascita</div>
+                                <Input type="date" bind:value={form.birth_date} />
+                            </div>
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">Telefono</div>
+                                <Input bind:value={form.phone} placeholder="Numero di telefono" />
+                            </div>
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">Email</div>
+                                <Input type="email" bind:value={form.email} placeholder="Email" />
+                            </div>
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">Nome visualizzato</div>
+                                <Input bind:value={form.name} placeholder="Nome (visualizzato)" />
+                            </div>
+                        </div>
+
+                        <div class="border-t border-border pt-4 space-y-3">
+                            <div class="text-sm font-medium">Luogo di nascita</div>
+
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <div class="text-xs text-muted-foreground mb-1">Italia / Estero</div>
+                                    <select
+                                        bind:value={form.birth_place_type}
+                                        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                    >
+                                        <option value="it">Italia</option>
+                                        <option value="foreign">Estero</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {#if form.birth_place_type === "it"}
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    <div>
+                                        <div class="text-xs text-muted-foreground mb-1">Provincia</div>
+                                        <select
+                                            bind:value={form.birth_province_code}
+                                            class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                        >
+                                            <option value="">Seleziona provincia...</option>
+                                            {#each italyPlaces.provinces as p (p.code)}
+                                                <option value={p.code}>{p.name} ({p.code})</option>
+                                            {/each}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-muted-foreground mb-1">Città</div>
+                                        <select
+                                            bind:value={form.birth_city}
+                                            class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                            disabled={!form.birth_province_code}
+                                        >
+                                            <option value="">Seleziona città...</option>
+                                            {#each citiesForBirthProvince as c (c)}
+                                                <option value={c}>{c}</option>
+                                            {/each}
+                                        </select>
+                                    </div>
+                                </div>
+                            {:else}
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    <div>
+                                        <div class="text-xs text-muted-foreground mb-1">Città</div>
+                                        <Input bind:value={form.birth_city} placeholder="Città (estero)" />
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-muted-foreground mb-1">Nazione</div>
+                                        <Input bind:value={form.birth_country} placeholder="Nazione" />
+                                    </div>
+                                </div>
+                            {/if}
+                        </div>
+                    </Card.Content>
+                </Card.Root>
+
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Residenza</Card.Title>
+                    </Card.Header>
+                    <Card.Content class="space-y-4">
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">Italia / Estero</div>
+                                <select
+                                    bind:value={form.residence_type}
+                                    class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                >
+                                    <option value="it">Italia</option>
+                                    <option value="foreign">Estero</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-3">
+                            <div class="sm:col-span-2">
+                                <div class="text-xs text-muted-foreground mb-1">Via</div>
+                                <Input bind:value={form.residence_street} placeholder="Via" />
+                            </div>
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">Numero civico</div>
+                                <Input bind:value={form.residence_house_number} placeholder="N." />
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs text-muted-foreground mb-1">Frazione</div>
+                            <Input bind:value={form.residence_locality} placeholder="Frazione" />
+                        </div>
+
+                        {#if form.residence_type === "it"}
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <div class="text-xs text-muted-foreground mb-1">Provincia</div>
+                                    <select
+                                        bind:value={form.residence_province_code}
+                                        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                    >
+                                        <option value="">Seleziona provincia...</option>
+                                        {#each italyPlaces.provinces as p (p.code)}
+                                            <option value={p.code}>{p.name} ({p.code})</option>
+                                        {/each}
+                                    </select>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-muted-foreground mb-1">Città</div>
+                                    <select
+                                        bind:value={form.residence_city}
+                                        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                        disabled={!form.residence_province_code}
+                                    >
+                                        <option value="">Seleziona città...</option>
+                                        {#each citiesForResidenceProvince as c (c)}
+                                            <option value={c}>{c}</option>
+                                        {/each}
+                                    </select>
+                                </div>
+                            </div>
+                        {:else}
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <div class="text-xs text-muted-foreground mb-1">Città</div>
+                                    <Input
+                                        bind:value={form.residence_city}
+                                        placeholder="Città (estero)"
+                                    />
+                                </div>
+                                <div>
+                                    <div class="text-xs text-muted-foreground mb-1">Nazione</div>
+                                    <Input
+                                        bind:value={form.residence_country}
+                                        placeholder="Nazione"
+                                    />
+                                </div>
+                            </div>
+                        {/if}
+                    </Card.Content>
+                </Card.Root>
+
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Iscrizione PLV</Card.Title>
+                    </Card.Header>
+                    <Card.Content class="space-y-4">
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">
+                                    Data iscrizione PLV
+                                </div>
+                                <Input type="date" bind:value={form.plv_joined_at} />
+                            </div>
+                            <div>
+                                <div class="text-xs text-muted-foreground mb-1">
+                                    Scadenza iscrizione (1 anno)
+                                </div>
+                                <Input value={expiresPreview} disabled />
+                            </div>
+                        </div>
+                        <div class="text-xs text-muted-foreground">
+                            La scadenza viene calcolata automaticamente dal backend come 1 anno dalla data iscrizione.
+                        </div>
+                    </Card.Content>
+                </Card.Root>
+            </div>
+        </div>
+    </div>
+</AdminLayout>
+
+
