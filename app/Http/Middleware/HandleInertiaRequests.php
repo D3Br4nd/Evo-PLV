@@ -29,6 +29,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // Ensure Italian UI strings for backend-driven labels (e.g. pagination).
+        app()->setLocale(env('APP_LOCALE', 'it'));
+
         $user = $request->user();
 
         return [
@@ -37,6 +40,7 @@ class HandleInertiaRequests extends Middleware
                 // Share actual values (not closures) because the frontend renders them directly.
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'invite_url' => $request->session()->get('invite_url'),
             ],
             'auth' => [
                 'user' => $user,

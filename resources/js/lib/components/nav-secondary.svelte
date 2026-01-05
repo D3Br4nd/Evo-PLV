@@ -1,5 +1,6 @@
 <script>
 	import * as Sidebar from "@/lib/components/ui/sidebar/index.js";
+	import { Link } from "@inertiajs/svelte";
 	let {
 		items,
 		...restProps
@@ -13,10 +14,10 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton>
 						{#snippet child({ props })}
-							<a href={item.url} {...props}>
+							<Link href={item.url} {...props}>
 								<item.icon />
 								<span>{item.title}</span>
-							</a>
+							</Link>
 						{/snippet}
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>

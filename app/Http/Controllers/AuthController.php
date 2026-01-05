@@ -36,8 +36,12 @@ class AuthController extends Controller
             $user = $request->user();
             $isAdmin = in_array($user->role, ['super_admin', 'direzione', 'segreteria'], true);
 
-            return $isAdmin
-                ? redirect()->intended('/admin/dashboard')
+            if ($isAdmin) {
+                return redirect()->intended('/admin/dashboard');
+            }
+
+            return $user->must_set_password
+                ? redirect()->intended('/me/onboarding')
                 : redirect()->intended('/me/card');
         }
 

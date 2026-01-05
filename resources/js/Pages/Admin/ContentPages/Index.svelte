@@ -64,19 +64,16 @@
 </script>
 
 <AdminLayout title="Contenuti">
+    {#snippet headerActions()}
+        {#if editing}
+            <Button variant="outline" onclick={reset}>Nuova pagina</Button>
+        {/if}
+    {/snippet}
+
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold">Contenuti</h1>
-                <p class="text-sm text-zinc-400">
+        <p class="text-sm text-muted-foreground">
                     Pagine pubbliche pubblicabili su <code>/p/{'{'}slug{'}'}</code>.
                 </p>
-            </div>
-            <!-- "Nuova pagina" is redundant: the form is already visible; use it only while editing -->
-            {#if editing}
-                <Button variant="outline" onclick={reset}>Nuova pagina</Button>
-            {/if}
-        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card.Root>

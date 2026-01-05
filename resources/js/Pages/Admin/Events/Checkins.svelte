@@ -12,6 +12,7 @@
 
     let qr_token = $state("");
     let processing = $state(false);
+    let headerTitle = $derived.by(() => `Check-in · ${event?.title || ""}`.trim());
 
     function submit() {
         if (!qr_token.trim()) return;
@@ -28,23 +29,23 @@
     }
 </script>
 
-<AdminLayout title="Check-in">
-    <div class="space-y-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold">Check-in</h1>
-                <p class="text-sm text-muted-foreground">
-                    Evento: <span class="text-foreground">{event.title}</span>
-                </p>
-            </div>
-
+<AdminLayout title={headerTitle}>
+    {#snippet headerActions()}
+        <Button variant="outline" onclick={() => router.get("/admin/events")}>
+            Torna agli eventi
+        </Button>
             <Button
                 variant="outline"
                 href={`/admin/events/${event.id}/checkins/export`}
             >
                 Esporta CSV
             </Button>
-        </div>
+    {/snippet}
+
+    <div class="space-y-6">
+        <p class="text-sm text-muted-foreground">
+            Evento: <span class="text-foreground">{event.title}</span>
+        </p>
 
         <Card.Root>
             <Card.Header>

@@ -24,6 +24,7 @@ class User extends Authenticatable
         'last_name',
         'email',
         'password',
+        'must_set_password',
         'role',
         'membership_status',
         'birth_date',
@@ -66,6 +67,7 @@ class User extends Authenticatable
             'birth_date' => 'date',
             'plv_joined_at' => 'date',
             'plv_expires_at' => 'date',
+            'must_set_password' => 'boolean',
         ];
     }
     

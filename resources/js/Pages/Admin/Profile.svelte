@@ -64,14 +64,7 @@
 
 <AdminLayout title="Profilo">
     <div class="space-y-6">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold">Profilo</h1>
-                <p class="text-sm text-muted-foreground">
-                    Dati personali e cambio password.
-                </p>
-            </div>
-        </div>
+        <p class="text-sm text-muted-foreground">Dati personali e cambio password.</p>
 
         {#if flash?.success}
             <div class="text-sm text-green-600 dark:text-green-400">

@@ -3,7 +3,12 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AdminMemberInvitationController;
+use App\Http\Controllers\MemberInvitationAcceptController;
 use App\Http\Controllers\MemberCardController;
+use App\Http\Controllers\MemberOnboardingController;
+use App\Http\Controllers\MemberPasswordController;
+use App\Http\Controllers\MemberPushSubscriptionController;
 use App\Http\Controllers\PublicContentPageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -13,13 +18,25 @@ Route::get('/', function () {
         $user = auth()->user();
         $isAdmin = in_array($user->role, ['super_admin', 'direzione', 'segreteria'], true);
 
-        return redirect($isAdmin ? '/admin/dashboard' : '/me/card');
+        if ($isAdmin) {
+            return redirect('/admin/dashboard');
+        }
+
+        return redirect($user->must_set_password ? '/me/onboarding' : '/me/card');
     }
 
     return Inertia::render('Welcome');
 })->name('home');
 
 Route::middleware('auth')->get('/me/card', [MemberCardController::class, 'show'])->name('member.card');
+Route::middleware('auth')->get('/me/onboarding', [MemberOnboardingController::class, 'show'])->name('member.onboarding');
+Route::middleware('auth')->patch('/me/password', [MemberPasswordController::class, 'update'])->name('member.password.update');
+Route::middleware('auth')->post('/me/push-subscriptions', [MemberPushSubscriptionController::class, 'store'])->name('member.push-subscriptions.store');
+Route::middleware('auth')->delete('/me/push-subscriptions', [MemberPushSubscriptionController::class, 'destroy'])->name('member.push-subscriptions.destroy');
+
+// One-time invitation link (public)
+Route::get('/invite/{token}', [MemberInvitationAcceptController::class, 'show'])->name('invite.accept');
+Route::post('/invite/{token}', [MemberInvitationAcceptController::class, 'store'])->name('invite.store');
 
 // Public content pages (published)
 Route::get('/p/{slug}', [PublicContentPageController::class, 'show'])->name('public.page');
@@ -47,6 +64,8 @@ Route::middleware(['auth', 'role:super_admin,direzione,segreteria'])->prefix('ad
     Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
 
     Route::resource('members', \App\Http\Controllers\AdminMemberController::class);
+    Route::post('members/{member}/invite', [AdminMemberInvitationController::class, 'store'])
+        ->name('members.invite.store');
     Route::patch('members/{member}/role', \App\Http\Controllers\AdminMemberRoleController::class.'@update')
         ->name('members.role.update')
         ->middleware('role:super_admin');

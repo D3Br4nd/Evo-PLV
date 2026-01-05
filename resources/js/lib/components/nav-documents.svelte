@@ -5,6 +5,7 @@
 	import TrashIcon from "@tabler/icons-svelte/icons/trash";
 	import * as DropdownMenu from "@/lib/components/ui/dropdown-menu/index.js";
 	import * as Sidebar from "@/lib/components/ui/sidebar/index.js";
+	import { Link } from "@inertiajs/svelte";
 
 	let { items } = $props();
 
@@ -12,16 +13,16 @@
 </script>
 
 <Sidebar.Group class="group-data-[collapsible=icon]:hidden">
-	<Sidebar.GroupLabel>Documents</Sidebar.GroupLabel>
+	<Sidebar.GroupLabel>Gestione</Sidebar.GroupLabel>
 	<Sidebar.Menu>
 		{#each items as item (item.name)}
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton>
 					{#snippet child({ props })}
-						<a {...props} href={item.url}>
+						<Link {...props} href={item.url}>
 							<item.icon />
 							<span>{item.name}</span>
-						</a>
+						</Link>
 					{/snippet}
 				</Sidebar.MenuButton>
 				<DropdownMenu.Root>
@@ -44,16 +45,16 @@
 					>
 						<DropdownMenu.Item>
 							<FolderIcon />
-							<span>Open</span>
+							<span>Apri</span>
 						</DropdownMenu.Item>
 						<DropdownMenu.Item>
 							<Share3Icon />
-							<span>Share</span>
+							<span>Condividi</span>
 						</DropdownMenu.Item>
 						<DropdownMenu.Separator />
 						<DropdownMenu.Item variant="destructive">
 							<TrashIcon />
-							<span>Delete</span>
+							<span>Elimina</span>
 						</DropdownMenu.Item>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
@@ -62,7 +63,7 @@
 		<Sidebar.MenuItem>
 			<Sidebar.MenuButton class="text-sidebar-foreground/70">
 				<DotsIcon class="text-sidebar-foreground/70" />
-				<span>More</span>
+				<span>Altro</span>
 			</Sidebar.MenuButton>
 		</Sidebar.MenuItem>
 	</Sidebar.Menu>

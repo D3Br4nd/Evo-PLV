@@ -1,17 +1,21 @@
 <script>
     import AdminLayout from "../../layouts/AdminLayout.svelte";
+    import { Button } from "@/lib/components/ui/button";
+    import { router } from "@inertiajs/svelte";
     let { stats } = $props();
 </script>
 
 <AdminLayout title="Dashboard">
     <div class="space-y-6">
-        <!-- Page Header -->
-        <div class="border-b border-border pb-4">
-            <h1 class="text-3xl font-bold text-foreground">Dashboard</h1>
-            <p class="mt-1 text-sm text-muted-foreground">
+        {#snippet headerActions()}
+            <Button variant="outline" onclick={() => router.get("/admin/members")}>
+                Vai ai soci
+            </Button>
+        {/snippet}
+
+        <p class="text-sm text-muted-foreground">
                 Benvenuto nel pannello amministrativo Pro Loco Venticanese
             </p>
-        </div>
 
         <!-- Stats Grid -->
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

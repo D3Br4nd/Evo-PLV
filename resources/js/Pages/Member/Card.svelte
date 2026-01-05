@@ -1,7 +1,8 @@
 <script>
-    import { page } from "@inertiajs/svelte";
-    import { Link } from "@inertiajs/svelte";
+    import { router } from "@inertiajs/svelte";
     import QRCode from "qrcode";
+    import MemberLayout from "@/layouts/MemberLayout.svelte";
+    import { Button } from "@/lib/components/ui/button";
 
     let { year, membership } = $props();
     let qrDataUrl = $state(null);
@@ -21,40 +22,25 @@
     });
 </script>
 
-<svelte:head>
-    <title>Tessera {year}</title>
-</svelte:head>
+<MemberLayout title={`Tessera ${year}`}>
+    {#snippet headerActions()}
+        <Button variant="outline" onclick={() => router.get("/me/onboarding")}>
+            Onboarding
+        </Button>
+    {/snippet}
 
-<div class="min-h-screen bg-background text-foreground p-6">
-    <div class="max-w-md mx-auto space-y-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold">Tessera socio {year}</h1>
-            <Link
-                href="/logout"
-                method="post"
-                as="button"
-                class="text-sm text-muted-foreground hover:text-foreground"
-                >Logout</Link
-            >
+    <div class="space-y-6 max-w-md">
+        <div class="text-sm text-muted-foreground">
+            Mostra questo QR all’ingresso degli eventi.
         </div>
 
         <div class="rounded-lg border bg-card p-6 space-y-4">
-            <div class="text-sm text-muted-foreground">
-                Mostra questo QR all’ingresso degli eventi.
-            </div>
-
             {#if membership}
                 <div class="flex justify-center">
                     {#if qrDataUrl}
-                        <img
-                            src={qrDataUrl}
-                            alt="QR Tessera"
-                            class="rounded bg-white p-2"
-                        />
+                        <img src={qrDataUrl} alt="QR Tessera" class="rounded bg-white p-2" />
                     {:else}
-                        <div class="text-sm text-muted-foreground">
-                            Generazione QR...
-                        </div>
+                        <div class="text-sm text-muted-foreground">Generazione QR...</div>
                     {/if}
                 </div>
 
@@ -67,12 +53,7 @@
                 </div>
             {/if}
         </div>
-
-        <div class="text-center text-sm text-muted-foreground">
-            Torna al
-            <Link href="/" class="underline hover:text-foreground">sito</Link>
-        </div>
     </div>
-</div>
+</MemberLayout>
 
 

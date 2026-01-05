@@ -3,18 +3,32 @@
     import { router, inertia } from "@inertiajs/svelte";
     import AdminLayout from "@/layouts/AdminLayout.svelte";
     import { page } from "@inertiajs/svelte";
+    import {
+        ChevronsLeft,
+        ChevronLeft,
+        ChevronRight,
+        ChevronsRight,
+        Users,
+        UserCheck,
+        UserX,
+        Mail,
+    } from "lucide-svelte";
     import { Button } from "@/lib/components/ui/button";
     import { Input } from "@/lib/components/ui/input";
     import { Badge } from "@/lib/components/ui/badge";
     import * as Card from "@/lib/components/ui/card";
     import * as Table from "@/lib/components/ui/table";
     import * as Dialog from "@/lib/components/ui/dialog";
+    import * as Select from "@/lib/components/ui/select";
+    import { Label } from "@/lib/components/ui/label";
 
-    let { users } = $props();
+    let { users, stats } = $props();
     let flash = $derived($page.props.flash);
     let canManageRoles = $derived($page.props.auth?.can?.manageRoles);
+    let inviteUrl = $derived($page.props?.flash?.invite_url);
 
     let search = $state("");
+    let perPage = $state("20");
     let isNewMemberOpen = $state(false);
     let isDeleteMemberOpen = $state(false);
     let deleteConfirmationUserId = $state(null);
@@ -32,6 +46,7 @@
     // Keep local search input in sync with server-provided filters (Inertia reactive props).
     $effect(() => {
         search = $page.props?.filters?.search || "";
+        perPage = `${$page.props?.filters?.per_page || users?.per_page || 20}`;
     });
 
     // Debounce search
@@ -41,10 +56,27 @@
         timer = setTimeout(() => {
             router.get(
                 "/admin/members",
-                { search: search },
+                { search: search, per_page: perPage, page: 1 },
                 { preserveState: true, replace: true },
             );
         }, 300);
+    }
+
+    function goToPage(pageNumber) {
+        router.get(
+            "/admin/members",
+            { search: search, per_page: perPage, page: pageNumber },
+            { preserveState: true, replace: true },
+        );
+    }
+
+    function setRowsPerPage(v) {
+        perPage = v;
+        router.get(
+            "/admin/members",
+            { search: search, per_page: perPage, page: 1 },
+            { preserveState: true, replace: true },
+        );
     }
 
     function openNewMemberModal() {
@@ -116,44 +148,118 @@
             { preserveScroll: true, preserveState: true },
         );
     }
+
+    function roleLabel(role) {
+        switch (role) {
+            case "super_admin":
+                return "Super Admin";
+            case "direzione":
+                return "Direzione";
+            case "segreteria":
+                return "Segreteria";
+            case "member":
+                return "Socio";
+            default:
+                return role || "-";
+        }
+    }
 </script>
 
 <AdminLayout title="Soci">
-    <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight">Soci</h1>
-                <p class="text-muted-foreground text-sm">
+    {#snippet headerActions()}
+        <Button onclick={openNewMemberModal}>Nuovo socio</Button>
+    {/snippet}
+
+    <div class="@container/main space-y-6">
+        <p class="text-sm text-muted-foreground">
                     Gestisci i membri dell'associazione.
                 </p>
-            </div>
-            <Button onclick={openNewMemberModal}>Nuovo socio</Button>
-        </div>
 
         {#if flash?.success}
             <div class="text-sm text-green-600 dark:text-green-400">{flash.success}</div>
+        {/if}
+        {#if inviteUrl}
+            <div class="text-sm text-muted-foreground">
+                Link invito (copia e invia al socio se necessario):
+                <span class="font-mono break-all">{inviteUrl}</span>
+            </div>
         {/if}
         {#if flash?.error}
             <div class="text-sm text-destructive">{flash.error}</div>
         {/if}
 
-        <!-- Search -->
-        <div class="flex items-center space-x-2">
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+            <Card.Root class="@container/card">
+                <Card.Header>
+                    <Card.Description>Totale soci</Card.Description>
+                    <Card.Title class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                        {stats?.total ?? users.total ?? 0}
+                    </Card.Title>
+                    <Card.Action>
+                        <Users class="h-4 w-4 text-muted-foreground" />
+                    </Card.Action>
+                </Card.Header>
+            </Card.Root>
+
+            <Card.Root class="@container/card">
+                <Card.Header>
+                    <Card.Description>Attivi</Card.Description>
+                    <Card.Title class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                        {stats?.active ?? 0}
+                    </Card.Title>
+                    <Card.Action>
+                        <UserCheck class="h-4 w-4 text-muted-foreground" />
+                    </Card.Action>
+                </Card.Header>
+            </Card.Root>
+
+            <Card.Root class="@container/card">
+                <Card.Header>
+                    <Card.Description>Scaduti</Card.Description>
+                    <Card.Title class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                        {stats?.expired ?? 0}
+                    </Card.Title>
+                    <Card.Action>
+                        <UserX class="h-4 w-4 text-muted-foreground" />
+                    </Card.Action>
+                </Card.Header>
+            </Card.Root>
+
+            <Card.Root class="@container/card">
+                <Card.Header>
+                    <Card.Description>Inviti in attesa</Card.Description>
+                    <Card.Title class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                        {stats?.pendingInvites ?? 0}
+                    </Card.Title>
+                    <Card.Action>
+                        <Mail class="h-4 w-4 text-muted-foreground" />
+                    </Card.Action>
+                </Card.Header>
+            </Card.Root>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div class="w-full max-w-md">
+                <Label for="member-search" class="text-sm font-medium">Cerca</Label>
             <Input
+                    id="member-search"
                 type="text"
                 bind:value={search}
                 oninput={handleSearch}
-                placeholder="Cerca soci..."
-                class="w-full max-w-sm"
+                    placeholder="Nome o email..."
+                    class="mt-2"
             />
+            </div>
         </div>
 
         <!-- Table -->
-        <Card.Root>
+        <!-- NOTE: Card.Root has default padding (py-6) and gap (gap-6). For tables we want a flush container. -->
+        <Card.Root class="overflow-hidden p-0 gap-0">
             <Card.Content class="p-0">
                 <Table.Root>
-                    <Table.Header>
+                        <Table.Header class="bg-muted">
                         <Table.Row>
                             <Table.Head>Nome</Table.Head>
                             <Table.Head>UUID</Table.Head>
@@ -163,6 +269,7 @@
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
+                            {#if users.data?.length}
                         {#each users.data as user (user.id)}
                             <Table.Row>
                                 <Table.Cell class="font-medium">
@@ -170,22 +277,27 @@
                                         <div
                                             class="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-xs font-semibold"
                                         >
-                                            {user.name.charAt(0).toUpperCase()}
+                                                    {user.name?.charAt(0)?.toUpperCase?.() || "U"}
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <div class="truncate">{user.name}</div>
+                                                    <div class="truncate text-xs text-muted-foreground">
+                                                        {user.email}
+                                                    </div>
                                         </div>
-                                        <span class="truncate">{user.name}</span>
                                     </div>
                                 </Table.Cell>
                                 <Table.Cell class="font-mono text-xs text-muted-foreground">
                                     {user.id.substring(0, 8)}…
                                 </Table.Cell>
                                 <Table.Cell>
-                                    {#if isActiveByExpiry(user) || (user.memberships && user.memberships.length > 0)}
+                                            {#if isActiveByExpiry(user) || (user.memberships && user.memberships.length > 0)}
                                         <Badge variant="secondary">Attivo</Badge>
                                     {:else}
                                         <Badge variant="outline">Scaduto</Badge>
                                     {/if}
                                 </Table.Cell>
-                                <Table.Cell class="capitalize">
+                                        <Table.Cell>
                                     {#if canManageRoles}
                                         <select
                                             value={user.role}
@@ -193,24 +305,24 @@
                                                 updateUserRole(user.id, e.currentTarget.value)}
                                             class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                                         >
-                                            <option value="super_admin">SuperAdmin</option>
+                                                    <option value="super_admin">Super Admin</option>
                                             <option value="direzione">Direzione</option>
                                             <option value="segreteria">Segreteria</option>
                                             <option value="member">Socio</option>
                                         </select>
                                     {:else}
-                                        <span class="text-muted-foreground">{user.role}</span>
+                                                <span class="text-muted-foreground">{roleLabel(user.role)}</span>
                                     {/if}
                                 </Table.Cell>
                                 <Table.Cell class="text-right">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onclick={() => router.get(`/admin/members/${user.id}`)}
-                                        class="mr-2"
-                                    >
-                                        Apri
-                                    </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onclick={() => router.get(`/admin/members/${user.id}`)}
+                                                class="mr-2"
+                                            >
+                                                Apri
+                                            </Button>
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -221,37 +333,79 @@
                                 </Table.Cell>
                             </Table.Row>
                         {/each}
+                            {:else}
+                                <Table.Row>
+                                    <Table.Cell colspan={5} class="h-24 text-center text-muted-foreground">
+                                        Nessun risultato.
+                                    </Table.Cell>
+                                </Table.Row>
+                            {/if}
                     </Table.Body>
                 </Table.Root>
             </Card.Content>
 
             <!-- Pagination -->
-            <div
-                class="px-6 py-4 border-t border-border flex items-center justify-between"
-            >
-                <div class="text-xs text-muted-foreground">
+            <div class="flex items-center justify-between px-4 py-3 border-t border-border">
+                <div class="text-xs text-muted-foreground hidden sm:block">
                     Membri {users.from || 0} - {users.to || 0} di {users.total}
                 </div>
-                <div class="space-x-1">
-                    {#each users.links as link}
-                        {#if link.url}
-                            <a
-                                href={link.url}
-                                class="px-3 py-1 text-xs rounded-md border border-border hover:bg-accent transition {link.active
-                                    ? 'bg-accent text-accent-foreground'
-                                    : 'text-muted-foreground'}"
-                                use:inertia
-                            >
-                                {@html link.label}
-                            </a>
-                        {:else}
-                            <span
-                                class="px-3 py-1 text-xs text-muted-foreground border border-border/50 rounded-md"
-                            >
-                                {@html link.label}
-                            </span>
-                        {/if}
-                    {/each}
+                <div class="flex w-full items-center gap-6 sm:w-auto">
+                    <div class="hidden items-center gap-2 sm:flex">
+                        <Label for="rows-per-page" class="text-sm font-medium">Righe per pagina</Label>
+                        <Select.Root type="single" bind:value={perPage} onValueChange={(v) => setRowsPerPage(v)}>
+                            <Select.Trigger size="sm" class="w-20" id="rows-per-page">
+                                {perPage}
+                            </Select.Trigger>
+                            <Select.Content side="top">
+                                {#each ["10", "20", "30", "40", "50"] as p (p)}
+                                    <Select.Item value={p}>{p}</Select.Item>
+                                {/each}
+                            </Select.Content>
+                        </Select.Root>
+                    </div>
+
+                    <div class="flex items-center justify-center text-sm font-medium">
+                        Pagina {users.current_page} di {users.last_page}
+                    </div>
+
+                    <div class="ms-auto flex items-center gap-2 sm:ms-0">
+                        <Button
+                            variant="outline"
+                            class="hidden h-8 w-8 p-0 sm:flex"
+                            onclick={() => goToPage(1)}
+                            disabled={users.current_page <= 1}
+                        >
+                            <span class="sr-only">Prima pagina</span>
+                            <ChevronsLeft class="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            class="h-8 w-8 p-0"
+                            onclick={() => goToPage(Math.max(1, users.current_page - 1))}
+                            disabled={users.current_page <= 1}
+                        >
+                            <span class="sr-only">Pagina precedente</span>
+                            <ChevronLeft class="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            class="h-8 w-8 p-0"
+                            onclick={() => goToPage(Math.min(users.last_page, users.current_page + 1))}
+                            disabled={users.current_page >= users.last_page}
+                        >
+                            <span class="sr-only">Pagina successiva</span>
+                            <ChevronRight class="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            class="hidden h-8 w-8 p-0 sm:flex"
+                            onclick={() => goToPage(users.last_page)}
+                            disabled={users.current_page >= users.last_page}
+                        >
+                            <span class="sr-only">Ultima pagina</span>
+                            <ChevronsRight class="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
             </div>
         </Card.Root>

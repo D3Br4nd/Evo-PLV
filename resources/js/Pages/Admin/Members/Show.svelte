@@ -16,6 +16,8 @@
     let serverErrors = $derived($page.props.errors || {});
     let errorsLocal = $state({});
 
+    let inviteUrl = $derived($page.props?.flash?.invite_url);
+
     let uuid = $derived(member?.id);
     let qrDataUrl = $state(null);
     let hydrated = $state(false);
@@ -151,27 +153,24 @@
             preserveState: true,
         });
     }
+
+    function generateInvite() {
+        router.post(`/admin/members/${member.id}/invite`, {}, { preserveScroll: true });
+    }
 </script>
 
 <AdminLayout title="Scheda socio">
-    <div class="space-y-6">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight">Scheda socio</h1>
-                <p class="text-muted-foreground text-sm">
-                    Anno tessera: {year}
-                </p>
-            </div>
+    {#snippet headerActions()}
+        <Button variant="outline" onclick={() => router.get("/admin/members")}>
+            Torna all’elenco
+        </Button>
+        <Button onclick={save} disabled={!hydrated || Object.keys(errorsLocal).length > 0}>
+            Salva
+        </Button>
+    {/snippet}
 
-            <div class="flex gap-2">
-                <Button variant="outline" onclick={() => router.get("/admin/members")}>
-                    Torna all’elenco
-                </Button>
-                <Button onclick={save} disabled={!hydrated || Object.keys(errorsLocal).length > 0}>
-                    Salva
-                </Button>
-            </div>
-        </div>
+    <div class="space-y-6">
+        <p class="text-sm text-muted-foreground">Anno tessera: {year}</p>
 
         {#if flash?.success}
             <div class="text-sm text-green-600 dark:text-green-400">{flash.success}</div>
@@ -206,6 +205,33 @@
             </Card.Root>
 
             <div class="space-y-6 lg:col-span-2">
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Accesso socio</Card.Title>
+                        <Card.Description>
+                            Genera un link invito (valido 7 giorni, utilizzabile una sola volta) per far accedere il socio e completare onboarding.
+                        </Card.Description>
+                    </Card.Header>
+                    <Card.Content class="space-y-3">
+                        <Button variant="outline" onclick={generateInvite}>
+                            Genera link invito
+                        </Button>
+
+                        {#if inviteUrl}
+                            <div class="text-xs text-muted-foreground">Link invito:</div>
+                            <div class="flex gap-2 items-center">
+                                <Input value={inviteUrl} readonly />
+                                <Button
+                                    variant="secondary"
+                                    onclick={() => navigator.clipboard?.writeText(inviteUrl)}
+                                >
+                                    Copia
+                                </Button>
+                            </div>
+                        {/if}
+                    </Card.Content>
+                </Card.Root>
+
                 <Card.Root>
                     <Card.Header>
                         <Card.Title>Dati personali</Card.Title>

@@ -14,6 +14,9 @@
 
     // State for Date Navigation
     let current = $derived(new Date(currentDate));
+    let headerTitle = $derived.by(() =>
+        `Eventi · ${current.toLocaleString("it-IT", { month: "long", year: "numeric" })}`,
+    );
 
     // Calendar Generation Logic
     let days = $derived.by(() => {
@@ -166,11 +169,8 @@
     }
 </script>
 
-<AdminLayout title="Eventi">
-    <div class="h-full flex flex-col space-y-4">
-        <!-- Header -->
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
+<AdminLayout title={headerTitle}>
+    {#snippet headerActions()}
                 <Button
                     variant="outline"
                     size="icon"
@@ -179,12 +179,6 @@
                 >
                     <ChevronLeft />
                 </Button>
-                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight capitalize">
-                    {current.toLocaleString("it-IT", {
-                        month: "long",
-                        year: "numeric",
-                    })}
-                </h1>
                 <Button
                     variant="outline"
                     size="icon"
@@ -193,10 +187,10 @@
                 >
                     <ChevronRight />
                 </Button>
-            </div>
             <Button onclick={() => openNewEvent(new Date())}>Nuovo evento</Button>
-        </div>
+    {/snippet}
 
+    <div class="h-full flex flex-col space-y-4">
         <!-- Calendar Grid -->
         <div
             class="grid grid-cols-7 gap-px bg-border border border-border rounded-lg overflow-hidden flex-1"
@@ -257,7 +251,7 @@
         </div>
     </div>
 
-    <!-- Dialog (Merged Create/Edit) -->
+    <!-- Dialog (Crea/Modifica) -->
     <Dialog.Root
         bind:open={isDialogOpen}
     >

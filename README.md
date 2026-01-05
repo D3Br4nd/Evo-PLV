@@ -106,6 +106,8 @@ Una volta che i container sono attivi (verifica con `docker compose ps`), esegui
 docker compose exec app php artisan migrate:fresh --seed
 ```
 
+> Nota: le migrazioni sono **squashate**. Laravel caricherà lo schema da `database/schema/pgsql-schema.sql` e poi applicherà eventuali nuove migrazioni future (se presenti).
+
 ### 4b. Bootstrap SuperAdmin (Produzione)
 
 Imposta queste variabili nel tuo `.env`:
@@ -159,7 +161,8 @@ plv_evo/
 ├── app/
 │   ├── Models/         # User, Event, Membership, Project (UUIDv7)
 ├── database/
-│   ├── migrations/     # 2025_01_01_000000_create_plv_schema.php (Squashed)
+│   ├── schema/         # pgsql-schema.sql (schema dump per fresh install)
+│   ├── migrations/     # nuove migrazioni future (cartella mantenuta vuota/clean)
 ├── resources/
 │   ├── js/Pages/       # Svelte Components (Admin/Members, Admin/Events, Admin/Projects)
 ├── docker/             # Configurazioni e volumi persistenti

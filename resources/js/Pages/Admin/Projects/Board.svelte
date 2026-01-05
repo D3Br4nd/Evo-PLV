@@ -108,22 +108,14 @@
 </script>
 
 <AdminLayout title="Progetti">
+    {#snippet headerActions()}
+        <Button onclick={() => (isNewProjectOpen = true)} aria-label="Nuovo Task">
+            Nuovo task
+        </Button>
+    {/snippet}
+
     <div class="h-full flex flex-col space-y-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight">Progetti</h1>
-                <p class="text-muted-foreground text-sm">
-                    Organizza i task per gli eventi.
-                </p>
-            </div>
-            <Button
-                onclick={() => (isNewProjectOpen = true)}
-                aria-label="Nuovo Task"
-            >
-                Nuovo task
-            </Button>
-        </div>
+        <p class="text-sm text-muted-foreground">Organizza i task per gli eventi.</p>
 
         <!-- Kanban Board -->
         <div class="flex-1 overflow-x-auto">

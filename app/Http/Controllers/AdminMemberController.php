@@ -8,8 +8,13 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Models\MemberInvitation;
+use App\Mail\MemberInvitationMail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AdminMemberController extends Controller
 {
@@ -19,6 +24,11 @@ class AdminMemberController extends Controller
     public function index(Request $request)
     {
         $year = (int) $request->input('year', now()->year);
+        $perPage = (int) $request->input('per_page', 20);
+        $allowedPerPage = [10, 20, 30, 40, 50];
+        if (! in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 20;
+        }
 
         $query = User::query()
             ->with(['memberships' => fn($q) => $q->where('year', $year)])
@@ -32,10 +42,30 @@ class AdminMemberController extends Controller
             });
         }
 
+        $today = now()->toDateString();
+        $totalMatching = (clone $query)->count();
+        $activeMatching = (clone $query)
+            ->where(function ($q) use ($today, $year) {
+                $q->whereDate('plv_expires_at', '>=', $today)
+                    ->orWhereHas('memberships', fn($m) => $m->where('year', $year));
+            })
+            ->count();
+
+        $pendingInvites = MemberInvitation::query()
+            ->whereNull('used_at')
+            ->where('expires_at', '>', now())
+            ->count();
+
         return Inertia::render('Admin/Members/Index', [
-            'users' => $query->paginate(20)->withQueryString(),
-            'filters' => $request->only(['search']),
+            'users' => $query->paginate($perPage)->withQueryString(),
+            'filters' => $request->only(['search', 'per_page']),
             'year' => $year,
+            'stats' => [
+                'total' => $totalMatching,
+                'active' => $activeMatching,
+                'expired' => max(0, $totalMatching - $activeMatching),
+                'pendingInvites' => $pendingInvites,
+            ],
         ]);
     }
 
@@ -71,15 +101,43 @@ class AdminMemberController extends Controller
             $this->authorize('manage-roles');
         }
 
-        User::create([
+        // Random password (user will set their own via invitation link)
+        $member = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => Hash::make('password'), // Default password
+            'password' => Hash::make(Str::random(64)),
+            'must_set_password' => true,
             'role' => $validated['role'],
             'membership_status' => 'inactive',
         ]);
 
-        return redirect()->back()->with('success', 'Socio creato con successo.');
+        // Create invitation + email
+        $token = Str::random(64);
+        $inviteUrl = url("/invite/{$token}");
+
+        MemberInvitation::create([
+            'user_id' => $member->id,
+            'created_by_user_id' => $request->user()?->id,
+            'token_hash' => hash('sha256', $token),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $mailSent = false;
+        try {
+            Mail::to($member->email)->send(new MemberInvitationMail($member, $inviteUrl));
+            $mailSent = true;
+        } catch (\Throwable $e) {
+            Log::warning('Member invitation email failed on member creation', [
+                'member_id' => $member->id,
+                'email' => $member->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', $mailSent ? 'Socio creato e invito inviato via email.' : 'Socio creato. Email invito non inviata: copia il link e invialo manualmente.')
+            ->with('invite_url', $inviteUrl);
     }
 
     /**
