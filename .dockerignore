@@ -1,4 +1,6 @@
-docker/
+docker/pgsql/
+docker/redis/
+docker/storage/
 node_modules/
 vendor/
 .env

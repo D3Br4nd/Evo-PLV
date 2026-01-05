@@ -29,6 +29,10 @@ RUN install-php-extensions \
 
 WORKDIR /app
 
+# Entrypoint wrapper: clears Laravel caches on start, then calls original docker-php-entrypoint.
+COPY docker/entrypoint.sh /usr/local/bin/plv-entrypoint
+RUN chmod +x /usr/local/bin/plv-entrypoint
+
 # App source
 COPY . /app
 
@@ -47,3 +51,6 @@ RUN mkdir -p /app/storage /app/bootstrap/cache && chmod -R 775 /app/storage /app
 
 # Generate Laravel package manifest (needed when composer scripts are skipped).
 RUN php artisan package:discover --ansi
+
+ENTRYPOINT ["plv-entrypoint"]
+CMD ["--config","/etc/frankenphp/Caddyfile","--adapter","caddyfile"]

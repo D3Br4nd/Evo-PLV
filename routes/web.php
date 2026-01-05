@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+        $isAdmin = in_array($user->role, ['super_admin', 'direzione', 'segreteria'], true);
+
+        return redirect($isAdmin ? '/admin/dashboard' : '/me/card');
+    }
+
     return Inertia::render('Welcome');
 })->name('home');
 
@@ -17,11 +24,18 @@ Route::middleware('auth')->get('/me/card', [MemberCardController::class, 'show']
 // Public content pages (published)
 Route::get('/p/{slug}', [PublicContentPageController::class, 'show'])->name('public.page');
 
+// Public legal pages
+Route::get('/privacy-policy', function () {
+    return Inertia::render('Public/PrivacyPolicy');
+})->name('privacy.policy');
+
+Route::get('/cookie-policy', function () {
+    return Inertia::render('Public/CookiePolicy');
+})->name('cookie.policy');
+
 // Authentication routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Admin routes (protected)

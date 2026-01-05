@@ -93,10 +93,7 @@
             </Card.Content>
             <Card.Footer class="justify-center">
                 <p class="text-sm text-muted-foreground">
-                    Non hai un account?
-                    <a href="/register" class="font-medium text-primary hover:underline"
-                        >Registrati</a
-                    >
+                    Non hai un account? Le registrazioni vengono gestite dalla segreteria.
                 </p>
             </Card.Footer>
         </Card.Root>
