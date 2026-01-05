@@ -7,6 +7,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -113,14 +114,24 @@ class AdminMemberController extends Controller
             'role' => 'sometimes|required|string|in:super_admin,direzione,segreteria,member',
         ]);
 
+        // Safety net: if migrations haven't run yet (e.g. during deploy), avoid writing to missing columns.
+        // This prevents 500s like: column "first_name" of relation "users" does not exist.
+        $validated = array_filter(
+            $validated,
+            fn($_v, $k) => Schema::hasColumn('users', $k),
+            ARRAY_FILTER_USE_BOTH
+        );
+
         if (array_key_exists('role', $validated) && $validated['role'] !== $member->role) {
             $this->authorize('manage-roles');
         }
 
         if (array_key_exists('plv_joined_at', $validated)) {
-            $validated['plv_expires_at'] = $validated['plv_joined_at']
-                ? Carbon::parse($validated['plv_joined_at'])->addYear()->toDateString()
-                : null;
+            if (Schema::hasColumn('users', 'plv_expires_at')) {
+                $validated['plv_expires_at'] = $validated['plv_joined_at']
+                    ? Carbon::parse($validated['plv_joined_at'])->addYear()->toDateString()
+                    : null;
+            }
         }
 
         $member->update($validated);

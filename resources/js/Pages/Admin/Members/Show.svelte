@@ -13,10 +13,12 @@
 
     let { member, year } = $props();
     let flash = $derived($page.props.flash);
-    let errors = $derived($page.props.errors || {});
+    let serverErrors = $derived($page.props.errors || {});
+    let errorsLocal = $state({});
 
     let uuid = $derived(member?.id);
     let qrDataUrl = $state(null);
+    let hydrated = $state(false);
 
     function dateOnly(v) {
         if (!v) return "";
@@ -62,11 +64,37 @@
         plv_joined_at: "",
     });
 
+    // Keep a local copy of server validation errors, so we can clear them on user edits
+    // (otherwise disabling the save button would deadlock resubmission).
+    $effect(() => {
+        errorsLocal = serverErrors || {};
+    });
+
+    // If user edits any field after a validation error, clear errors locally to allow resubmission.
+    // Important: clear only on *actual* form changes (not on first run / hydration).
+    let _hasFormSnapshot = false;
+    let _lastFormSnapshot = "";
+    $effect(() => {
+        // Spreading reads each key, establishing reactive dependencies on all fields.
+        const snapshot = JSON.stringify({ ...form });
+
+        if (!_hasFormSnapshot) {
+            _hasFormSnapshot = true;
+            _lastFormSnapshot = snapshot;
+            return;
+        }
+
+        if (snapshot === _lastFormSnapshot) return;
+        _lastFormSnapshot = snapshot;
+
+        if (Object.keys(errorsLocal).length > 0) errorsLocal = {};
+    });
+
     // Sync form from server-provided member.
     // Do NOT overwrite local input if there are validation errors.
     $effect(() => {
         if (!member?.id) return;
-        if (Object.keys(errors).length > 0) return;
+        if (Object.keys(serverErrors).length > 0) return;
 
         form.name = member?.name ?? "";
         form.first_name = member?.first_name ?? "";
@@ -89,6 +117,7 @@
         form.residence_country = member?.residence_country ?? "";
 
         form.plv_joined_at = dateOnly(member?.plv_joined_at ?? "");
+        hydrated = true;
     });
 
     function addOneYear(dateStr) {
@@ -112,6 +141,11 @@
     );
 
     function save() {
+        if (!member?.id) return;
+        // Safety net: avoid sending empty strings for required fields if user clicks too fast.
+        if (!form.name) form.name = member?.name ?? "";
+        if (!form.email) form.email = member?.email ?? "";
+
         router.patch(`/admin/members/${member.id}`, form, {
             preserveScroll: true,
             preserveState: true,
@@ -133,7 +167,9 @@
                 <Button variant="outline" onclick={() => router.get("/admin/members")}>
                     Torna all’elenco
                 </Button>
-                <Button onclick={save}>Salva</Button>
+                <Button onclick={save} disabled={!hydrated || Object.keys(errorsLocal).length > 0}>
+                    Salva
+                </Button>
             </div>
         </div>
 
