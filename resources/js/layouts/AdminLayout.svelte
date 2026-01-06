@@ -3,6 +3,8 @@
     import * as Sidebar from "@/lib/components/ui/sidebar/index.js";
     import AppSidebar from "@/lib/components/app-sidebar.svelte";
     import SiteHeader from "@/lib/components/site-header.svelte";
+    import FlashToasts from "@/lib/components/FlashToasts.svelte";
+    import { Toaster } from "svelte-sonner";
 
     let { title = "Admin", children, headerActions } = $props();
 </script>
@@ -14,6 +16,8 @@
 <Sidebar.Provider
     style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
 >
+    <FlashToasts />
+    <Toaster richColors />
     <AppSidebar variant="inset" />
     <Sidebar.Inset>
         <SiteHeader {title} {headerActions} />

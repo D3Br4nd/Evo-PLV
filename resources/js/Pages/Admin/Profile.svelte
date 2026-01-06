@@ -4,11 +4,13 @@
     import { Input } from "@/lib/components/ui/input";
     import { Button } from "@/lib/components/ui/button";
     import * as Card from "@/lib/components/ui/card";
+    import * as Avatar from "@/lib/components/ui/avatar/index.js";
 
     let { flash } = $props();
     let user = $derived($page.props.auth?.user);
 
     let profileProcessing = $state(false);
+    let avatarProcessing = $state(false);
     let passwordProcessing = $state(false);
 
     let profileForm = $state({ name: "", email: "" });
@@ -36,6 +38,61 @@
             .join("")
             .toUpperCase()
             .slice(0, 2);
+    }
+
+    let avatarFile = $state(null);
+    let avatarPreviewUrl = $state(null);
+    // Keep last object URL in a non-reactive variable to avoid $effect loops.
+    let lastAvatarObjectUrl = null;
+
+    $effect(() => {
+        // Depend ONLY on avatarFile to prevent infinite reruns.
+        if (lastAvatarObjectUrl) {
+            URL.revokeObjectURL(lastAvatarObjectUrl);
+            lastAvatarObjectUrl = null;
+        }
+
+        if (!avatarFile) {
+            avatarPreviewUrl = null;
+            return;
+        }
+
+        lastAvatarObjectUrl = URL.createObjectURL(avatarFile);
+        avatarPreviewUrl = lastAvatarObjectUrl;
+
+        return () => {
+            if (lastAvatarObjectUrl) {
+                URL.revokeObjectURL(lastAvatarObjectUrl);
+                lastAvatarObjectUrl = null;
+            }
+        };
+    });
+
+    function uploadAvatar() {
+        if (!avatarFile) return;
+        avatarProcessing = true;
+        const fd = new FormData();
+        fd.append("avatar", avatarFile);
+        router.post("/admin/profile/avatar", fd, {
+            preserveScroll: true,
+            onFinish: () => {
+                avatarProcessing = false;
+                avatarFile = null;
+            },
+        });
+    }
+
+    function removeAvatar() {
+        if (!user?.avatar_url) return;
+        if (!confirm("Rimuovere l’avatar?")) return;
+        avatarProcessing = true;
+        router.delete("/admin/profile/avatar", {
+            preserveScroll: true,
+            onFinish: () => {
+                avatarProcessing = false;
+                avatarFile = null;
+            },
+        });
     }
 
     function saveProfile() {
@@ -83,11 +140,12 @@
                 </Card.Header>
                 <Card.Content class="space-y-4">
                     <div class="flex items-center gap-3">
-                        <div
-                            class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold"
-                        >
-                            {initials(user?.name)}
-                        </div>
+                        <Avatar.Root class="size-10">
+                            <Avatar.Image src={user?.avatar_url} alt={user?.name} />
+                            <Avatar.Fallback class="bg-primary text-primary-foreground text-sm font-semibold">
+                                {initials(user?.name)}
+                            </Avatar.Fallback>
+                        </Avatar.Root>
                         <div class="min-w-0">
                             <div class="font-medium truncate">{user?.name}</div>
                             <div class="text-xs text-muted-foreground truncate">
@@ -95,6 +153,57 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-medium" for="p-avatar">Avatar</label>
+                        <div class="flex items-center gap-2">
+                            <Input
+                                id="p-avatar"
+                                type="file"
+                                accept="image/*"
+                                disabled={avatarProcessing}
+                                onchange={(e) => (avatarFile = e.currentTarget.files?.[0] || null)}
+                            />
+                            <Button variant="outline" disabled={avatarProcessing || !avatarFile} onclick={uploadAvatar}>
+                                {avatarProcessing ? "Caricamento..." : "Carica"}
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                disabled={avatarProcessing || !user?.avatar_url}
+                                onclick={removeAvatar}
+                            >
+                                Rimuovi
+                            </Button>
+                        </div>
+                        {#if $page.props.errors?.avatar}
+                            <p class="text-sm text-destructive">{$page.props.errors.avatar}</p>
+                        {/if}
+                        <p class="text-xs text-muted-foreground">
+                            JPG/PNG/WebP, max 2MB.
+                        </p>
+                    </div>
+
+                    {#if avatarPreviewUrl || user?.avatar_url}
+                        <div class="space-y-2">
+                            <div class="text-sm font-medium">Anteprima</div>
+                            <div class="rounded-lg border bg-card p-4">
+                                <div class="flex items-center gap-4">
+                                    <img
+                                        src={avatarPreviewUrl || user?.avatar_url}
+                                        alt="Anteprima avatar"
+                                        class="h-24 w-24 rounded-md object-cover border bg-background"
+                                    />
+                                    <div class="text-xs text-muted-foreground">
+                                        {#if avatarPreviewUrl}
+                                            Questa è l’immagine selezionata (prima del caricamento).
+                                        {:else}
+                                            Avatar attuale.
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {/if}
 
                     <div class="space-y-1.5">
                         <label class="text-sm font-medium" for="p-name">Nome</label>

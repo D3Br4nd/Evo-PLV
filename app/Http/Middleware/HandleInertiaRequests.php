@@ -33,6 +33,20 @@ class HandleInertiaRequests extends Middleware
         app()->setLocale(env('APP_LOCALE', 'it'));
 
         $user = $request->user();
+        $authUser = null;
+        if ($user) {
+            $authUser = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'plv_role' => $user->plv_role,
+                'must_set_password' => (bool) $user->must_set_password,
+                'avatar_url' => $user->avatar_url,
+            ];
+        }
 
         return [
             ...parent::share($request),
@@ -43,7 +57,7 @@ class HandleInertiaRequests extends Middleware
                 'invite_url' => $request->session()->get('invite_url'),
             ],
             'auth' => [
-                'user' => $user,
+                'user' => $authUser,
                 'can' => [
                     'manageRoles' => $user ? $user->can('manage-roles') : false,
                 ],

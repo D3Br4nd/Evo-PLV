@@ -3,6 +3,8 @@
   import CookieConsent from "@/lib/components/cookie-consent.svelte";
   import { cn } from "@/lib/utils/cn";
   import { buttonVariants } from "@/lib/components/ui/button";
+  import FlashToasts from "@/lib/components/FlashToasts.svelte";
+  import { Toaster } from "svelte-sonner";
   let { title, children } = $props();
 
   const PRIVACY_URL = "https://www.prolocoventicano.com/privacy-policy";
@@ -14,6 +16,8 @@
 </svelte:head>
 
 <div class="min-h-screen bg-background text-foreground">
+  <FlashToasts />
+  <Toaster richColors />
   <header class="border-b">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
       <a href="/" class="flex items-center gap-3">

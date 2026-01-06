@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -28,6 +29,43 @@ class AdminProfileController extends Controller
         $user->update($validated);
 
         return redirect()->back()->with('success', 'Profilo aggiornato.');
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'avatar' => ['required', 'image', 'max:2048'], // 2MB
+        ]);
+
+        // Delete old avatar (if any)
+        if ($user->avatar_path) {
+            Storage::disk('public')->delete($user->avatar_path);
+        }
+
+        $path = $validated['avatar']->storePublicly('avatars', 'public');
+
+        $user->update([
+            'avatar_path' => $path,
+        ]);
+
+        return redirect()->back()->with('success', 'Avatar aggiornato.');
+    }
+
+    public function destroyAvatar(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->avatar_path) {
+            Storage::disk('public')->delete($user->avatar_path);
+        }
+
+        $user->update([
+            'avatar_path' => null,
+        ]);
+
+        return redirect()->back()->with('success', 'Avatar rimosso.');
     }
 
     public function updatePassword(Request $request)

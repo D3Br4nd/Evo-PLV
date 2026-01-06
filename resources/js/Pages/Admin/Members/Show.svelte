@@ -48,6 +48,7 @@
         last_name: "",
         email: "",
         phone: "",
+        plv_role: "",
 
         birth_date: "",
         birth_place_type: "it",
@@ -103,6 +104,7 @@
         form.last_name = member?.last_name ?? "";
         form.email = member?.email ?? "";
         form.phone = member?.phone ?? "";
+        form.plv_role = member?.plv_role ?? "";
 
         form.birth_date = dateOnly(member?.birth_date ?? "");
         form.birth_place_type = member?.birth_place_type ?? "it";
@@ -237,6 +239,31 @@
                         <Card.Title>Dati personali</Card.Title>
                     </Card.Header>
                     <Card.Content class="space-y-4">
+                        <div class="space-y-1.5">
+                            <div class="text-xs text-muted-foreground">Ruolo Pro Loco (incarico)</div>
+                            <select
+                                bind:value={form.plv_role}
+                                class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                            >
+                                <option value="">— Seleziona —</option>
+                                <option value="PLV Evo Admin">PLV Evo Admin</option>
+                                <option value="PRESIDENTE">PRESIDENTE</option>
+                                <option value="VICE PRESIDENTE">VICE PRESIDENTE</option>
+                                <option value="CASSIERE">CASSIERE</option>
+                                <option value="SEGRETARIO">SEGRETARIO</option>
+                                <option value="MAGAZZINIERE">MAGAZZINIERE</option>
+                                <option value="CONSIGLIERE">CONSIGLIERE</option>
+                                <option value="PRESIDENTE DEI REVISORI">PRESIDENTE DEI REVISORI</option>
+                                <option value="REVISORE">REVISORE</option>
+                                <option value="SUPPLENTE REVISORE">SUPPLENTE REVISORE</option>
+                                <option value="PRESIDENTE DEI PROBIVIRI">PRESIDENTE DEI PROBIVIRI</option>
+                                <option value="PROBIVIRO">PROBIVIRO</option>
+                            </select>
+                            {#if errorsLocal?.plv_role}
+                                <p class="text-sm text-destructive">{errorsLocal.plv_role}</p>
+                            {/if}
+                        </div>
+
                         <div class="grid gap-3 sm:grid-cols-2">
                             <div>
                                 <div class="text-xs text-muted-foreground mb-1">Nome</div>

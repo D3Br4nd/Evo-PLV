@@ -25,7 +25,8 @@ export default defineConfig({
                 name: 'Pro Loco Venticanese',
                 short_name: 'PLV Evolution',
                 description: 'L\'evoluzione della tradizione.',
-                start_url: '/',
+                // PWA should land on the mobile member home.
+                start_url: '/me',
                 scope: '/',
                 display: 'standalone',
                 theme_color: '#000000',
@@ -43,7 +44,6 @@ export default defineConfig({
                 ]
             },
             workbox: {
-                navigateFallback: '/',
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
             },
         })

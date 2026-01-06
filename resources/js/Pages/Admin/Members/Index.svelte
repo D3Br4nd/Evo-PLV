@@ -29,7 +29,6 @@
 
     let search = $state("");
     let perPage = $state("20");
-    let isNewMemberOpen = $state(false);
     let isDeleteMemberOpen = $state(false);
     let deleteConfirmationUserId = $state(null);
     let processing = $state(false);
@@ -79,14 +78,6 @@
         );
     }
 
-    function openNewMemberModal() {
-        isNewMemberOpen = true;
-    }
-
-    function closeNewMemberModal() {
-        isNewMemberOpen = false;
-    }
-
     function openDeleteModal(userId) {
         deleteConfirmationUserId = userId;
         isDeleteMemberOpen = true;
@@ -112,31 +103,6 @@
             onFinish: () => {
                 processing = false;
                 closeDeleteModal();
-            },
-        });
-    }
-
-    // Form Handling for New Member would go here or in a separate component.
-    // For now, I'll implement a basic form inside the dialog.
-    let newMemberForm = $state({
-        name: "",
-        email: "",
-        role: "member",
-    });
-
-    function createMember() {
-        processing = true;
-        router.post("/admin/members", newMemberForm, {
-            onSuccess: () => {
-                closeNewMemberModal();
-                newMemberForm = { name: "", email: "", role: "member" };
-            },
-            onError: () => {
-                // Keep dialog open so validation errors are visible.
-                isNewMemberOpen = true;
-            },
-            onFinish: () => {
-                processing = false;
             },
         });
     }
@@ -167,7 +133,7 @@
 
 <AdminLayout title="Soci">
     {#snippet headerActions()}
-        <Button onclick={openNewMemberModal}>Nuovo socio</Button>
+        <Button onclick={() => router.get("/admin/members/create")}>Nuovo socio</Button>
     {/snippet}
 
     <div class="@container/main space-y-6">
@@ -410,52 +376,6 @@
             </div>
         </Card.Root>
     </div>
-
-    <Dialog.Root bind:open={isNewMemberOpen}>
-        <Dialog.Content class="max-w-md">
-            <Dialog.Header>
-                <Dialog.Title>Nuovo socio</Dialog.Title>
-                <Dialog.Description>Crea un nuovo membro.</Dialog.Description>
-            </Dialog.Header>
-
-            <div class="mt-4 space-y-3">
-                <Input bind:value={newMemberForm.name} placeholder="Nome" />
-                {#if $page.props.errors?.name}
-                    <p class="text-sm text-destructive">{$page.props.errors.name}</p>
-                {/if}
-                <Input
-                    bind:value={newMemberForm.email}
-                    type="email"
-                    placeholder="Email"
-                />
-                {#if $page.props.errors?.email}
-                    <p class="text-sm text-destructive">{$page.props.errors.email}</p>
-                {/if}
-                {#if canManageRoles}
-                    <select
-                        bind:value={newMemberForm.role}
-                        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                    >
-                        <option value="member">Socio</option>
-                        <option value="segreteria">Segreteria</option>
-                        <option value="direzione">Direzione</option>
-                        <option value="super_admin">SuperAdmin</option>
-                    </select>
-                {:else}
-                    <Input value="Socio" disabled />
-                {/if}
-            </div>
-
-            <Dialog.Footer class="mt-6">
-                <Button variant="outline" onclick={closeNewMemberModal} disabled={processing}>
-                    Annulla
-                </Button>
-                <Button onclick={createMember} disabled={processing}>
-                    {processing ? "Salvataggio..." : "Crea"}
-                </Button>
-            </Dialog.Footer>
-        </Dialog.Content>
-    </Dialog.Root>
 
     <Dialog.Root bind:open={isDeleteMemberOpen}>
         <Dialog.Content class="max-w-md">

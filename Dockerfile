@@ -27,6 +27,18 @@ RUN install-php-extensions \
     zip \
     pcntl
 
+# Required for `php artisan schema:dump` on PostgreSQL (uses pg_dump).
+# Our db image is postgres:18.1, so we install the matching client version to avoid version mismatch errors.
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl gnupg; \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg; \
+    . /etc/os-release; \
+    echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" > /etc/apt/sources.list.d/pgdg.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends postgresql-client-18; \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Entrypoint wrapper: clears Laravel caches on start, then calls original docker-php-entrypoint.

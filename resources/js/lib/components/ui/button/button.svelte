@@ -41,6 +41,7 @@
 		href = undefined,
 		type = "button",
 		disabled,
+		onclick,
 		children,
 		...restProps
 	} = $props();
@@ -64,6 +65,7 @@
 		bind:this={ref}
 		data-slot="button"
 		class={cn(buttonVariants({ variant, size }), className)}
+		onclick={onclick}
 		{type}
 		{disabled}
 		{...restProps}

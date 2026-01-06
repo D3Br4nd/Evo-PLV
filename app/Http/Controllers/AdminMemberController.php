@@ -18,6 +18,20 @@ use Illuminate\Support\Facades\Mail;
 
 class AdminMemberController extends Controller
 {
+    private const PLV_ROLES = [
+        'PLV Evo Admin',
+        'PRESIDENTE',
+        'VICE PRESIDENTE',
+        'CASSIERE',
+        'SEGRETARIO',
+        'MAGAZZINIERE',
+        'CONSIGLIERE',
+        'PRESIDENTE DEI REVISORI',
+        'REVISORE',
+        'SUPPLENTE REVISORE',
+        'PRESIDENTE DEI PROBIVIRI',
+        'PROBIVIRO',
+    ];
     /**
      * Display a listing of the resource.
      */
@@ -87,6 +101,18 @@ class AdminMemberController extends Controller
     }
 
     /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request)
+    {
+        $year = (int) $request->input('year', now()->year);
+
+        return Inertia::render('Admin/Members/Create', [
+            'year' => $year,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -95,21 +121,52 @@ class AdminMemberController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'role' => 'required|string|in:super_admin,direzione,segreteria,member',
+            'plv_role' => ['sometimes', 'nullable', Rule::in(self::PLV_ROLES)],
+
+            'first_name' => 'sometimes|nullable|string|max:255',
+            'last_name' => 'sometimes|nullable|string|max:255',
+            'phone' => 'sometimes|nullable|string|max:50',
+
+            'birth_date' => 'sometimes|nullable|date',
+            'birth_place_type' => 'sometimes|nullable|string|in:it,foreign',
+            'birth_province_code' => 'sometimes|nullable|string|size:2',
+            'birth_city' => 'sometimes|nullable|string|max:255',
+            'birth_country' => 'sometimes|nullable|string|max:255',
+
+            'residence_type' => 'sometimes|nullable|string|in:it,foreign',
+            'residence_street' => 'sometimes|nullable|string|max:255',
+            'residence_house_number' => 'sometimes|nullable|string|max:50',
+            'residence_locality' => 'sometimes|nullable|string|max:255',
+            'residence_province_code' => 'sometimes|nullable|string|size:2',
+            'residence_city' => 'sometimes|nullable|string|max:255',
+            'residence_country' => 'sometimes|nullable|string|max:255',
+
+            'plv_joined_at' => 'sometimes|nullable|date',
         ]);
 
         if ($validated['role'] !== UserRole::Member->value) {
             $this->authorize('manage-roles');
         }
 
+        // Safety net: if migrations haven't run yet (e.g. during deploy), avoid writing to missing columns.
+        $validated = array_filter(
+            $validated,
+            fn($_v, $k) => Schema::hasColumn('users', $k),
+            ARRAY_FILTER_USE_BOTH
+        );
+
+        if (array_key_exists('plv_joined_at', $validated) && Schema::hasColumn('users', 'plv_expires_at')) {
+            $validated['plv_expires_at'] = $validated['plv_joined_at']
+                ? Carbon::parse($validated['plv_joined_at'])->addYear()->toDateString()
+                : null;
+        }
+
         // Random password (user will set their own via invitation link)
-        $member = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+        $member = User::create(array_merge($validated, [
             'password' => Hash::make(Str::random(64)),
             'must_set_password' => true,
-            'role' => $validated['role'],
             'membership_status' => 'inactive',
-        ]);
+        ]));
 
         // Create invitation + email
         $token = Str::random(64);
@@ -134,8 +191,9 @@ class AdminMemberController extends Controller
             ]);
         }
 
+        // After creation, send admin directly to the member profile page to fill out all fields.
         return redirect()
-            ->back()
+            ->to("/admin/members/{$member->id}")
             ->with('success', $mailSent ? 'Socio creato e invito inviato via email.' : 'Socio creato. Email invito non inviata: copia il link e invialo manualmente.')
             ->with('invite_url', $inviteUrl);
     }
@@ -151,6 +209,7 @@ class AdminMemberController extends Controller
             'last_name' => 'sometimes|nullable|string|max:255',
             'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($member->id)],
             'phone' => 'sometimes|nullable|string|max:50',
+            'plv_role' => ['sometimes', 'nullable', Rule::in(self::PLV_ROLES)],
 
             'birth_date' => 'sometimes|nullable|date',
             'birth_place_type' => 'sometimes|nullable|string|in:it,foreign',

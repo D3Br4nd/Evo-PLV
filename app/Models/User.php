@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -23,9 +24,11 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'email',
+        'avatar_path',
         'password',
         'must_set_password',
         'role',
+        'plv_role',
         'membership_status',
         'birth_date',
         'birth_place_type',
@@ -42,6 +45,15 @@ class User extends Authenticatable
         'plv_joined_at',
         'plv_expires_at',
         'phone',
+    ];
+
+    /**
+     * Computed attributes included when serializing the model (e.g. shared to Inertia).
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'avatar_url',
     ];
 
     /**
@@ -69,6 +81,15 @@ class User extends Authenticatable
             'plv_expires_at' => 'date',
             'must_set_password' => 'boolean',
         ];
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->avatar_path);
     }
     
     /**

@@ -3,11 +3,55 @@
     import { onMount } from "svelte";
     import PublicLayout from "@/layouts/PublicLayout.svelte";
     import { buttonVariants } from "@/lib/components/ui/button";
+    import { Button } from "@/lib/components/ui/button";
     import * as Card from "@/lib/components/ui/card";
     import { Badge } from "@/lib/components/ui/badge";
     import { Separator } from "@/lib/components/ui/separator";
+    import * as Tooltip from "@/lib/components/ui/tooltip/index.js";
+    import * as Dialog from "@/lib/components/ui/dialog";
     import { cn } from "@/lib/utils/cn";
-    import { CalendarDays, CreditCard, ShieldCheck, Users } from "lucide-svelte";
+    import { CalendarDays, CreditCard, ShieldCheck, Users, Download, Info } from "lucide-svelte";
+    import { toast } from "svelte-sonner";
+
+    let deferredPrompt = $state(null);
+    let isInstalled = $state(false);
+    let isIos = $state(false);
+
+    function computeInstalled() {
+        try {
+            const standalone =
+                window.matchMedia?.("(display-mode: standalone)")?.matches ||
+                window.navigator?.standalone === true;
+            isInstalled = !!standalone;
+        } catch (e) {
+            isInstalled = false;
+        }
+    }
+
+    async function installPwa() {
+        computeInstalled();
+        if (isInstalled) {
+            toast.message("App già installata.");
+            return;
+        }
+
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            if (choice?.outcome === "accepted") toast.success("Installazione avviata.");
+            else toast.message("Installazione annullata.");
+            return;
+        }
+
+        // iOS Safari (no prompt)
+        if (isIos) {
+            toast.message("Su iPhone/iPad: Condividi → Aggiungi a Home.");
+            return;
+        }
+
+        toast.message("Apri il menu del browser e scegli “Installa app”.");
+    }
 
     function scrollToId(id) {
         const el = document.getElementById(id);
@@ -30,11 +74,34 @@
     }
 
     onMount(() => {
+        const ua = window.navigator?.userAgent?.toLowerCase?.() || "";
+        isIos = /iphone|ipad|ipod/.test(ua);
+
+        computeInstalled();
+
+        const onBip = (e) => {
+            // Chrome/Edge on Android: capture install prompt
+            e.preventDefault();
+            deferredPrompt = e;
+        };
+
+        const onInstalled = () => {
+            deferredPrompt = null;
+            computeInstalled();
+        };
+
+        window.addEventListener("beforeinstallprompt", onBip);
+        window.addEventListener("appinstalled", onInstalled);
+
         // When loading /#come-funziona, the anchor target doesn't exist until the SPA renders.
         // So we scroll after mount, and keep supporting hash changes.
         scrollToHash();
         window.addEventListener("hashchange", scrollToHash);
-        return () => window.removeEventListener("hashchange", scrollToHash);
+        return () => {
+            window.removeEventListener("hashchange", scrollToHash);
+            window.removeEventListener("beforeinstallprompt", onBip);
+            window.removeEventListener("appinstalled", onInstalled);
+        };
     });
 </script>
 
@@ -67,6 +134,106 @@
                     >
                         Accedi
                     </Link>
+                    <div class="flex items-center gap-2">
+                        <Button variant="outline" onclick={installPwa} disabled={isInstalled}>
+                            <Download class="mr-2 size-4" />
+                            {isInstalled ? "App installata" : "Installa app"}
+                        </Button>
+                        <!-- Desktop: tooltip (hover). Mobile: dialog (tap). -->
+                        <div class="hidden sm:block">
+                            <Tooltip.Provider>
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger>
+                                        {#snippet child({ props })}
+                                            <button
+                                                {...props}
+                                                type="button"
+                                                class={cn(
+                                                    buttonVariants({ variant: "ghost", size: "icon" }),
+                                                    "h-10 w-10"
+                                                )}
+                                                aria-label="Istruzioni installazione"
+                                            >
+                                                <Info class="size-4" />
+                                            </button>
+                                        {/snippet}
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content class="max-w-xs" side="bottom" sideOffset={8}>
+                                        <div class="space-y-3 text-sm">
+                                            <div class="font-medium">Installazione PWA</div>
+                                            <div class="space-y-2">
+                                                <div class="font-medium text-xs text-muted-foreground">Android (Chrome)</div>
+                                                <div class="text-xs text-muted-foreground">
+                                                    Tocca <span class="font-medium text-foreground">Installa app</span> oppure:
+                                                    menu ⋮ → <span class="font-medium text-foreground">Installa app</span>.
+                                                </div>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <div class="font-medium text-xs text-muted-foreground">iPhone/iPad (Safari)</div>
+                                                <div class="text-xs text-muted-foreground">
+                                                    Tocca <span class="font-medium text-foreground">Condividi</span> →
+                                                    <span class="font-medium text-foreground">Aggiungi a Home</span>.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Tooltip.Content>
+                                </Tooltip.Root>
+                            </Tooltip.Provider>
+                        </div>
+
+                        <div class="sm:hidden">
+                            <Dialog.Root>
+                                <Dialog.Trigger>
+                                    {#snippet child({ props })}
+                                        <button
+                                            {...props}
+                                            type="button"
+                                            class={cn(
+                                                buttonVariants({ variant: "ghost", size: "icon" }),
+                                                "h-10 w-10"
+                                            )}
+                                            aria-label="Istruzioni installazione"
+                                        >
+                                            <Info class="size-4" />
+                                        </button>
+                                    {/snippet}
+                                </Dialog.Trigger>
+                                <Dialog.Content class="max-w-md">
+                                    <Dialog.Header>
+                                        <Dialog.Title>Installazione PWA</Dialog.Title>
+                                        <Dialog.Description>
+                                            Procedura di installazione su Android e iOS.
+                                        </Dialog.Description>
+                                    </Dialog.Header>
+
+                                    <div class="mt-4 space-y-4 text-sm">
+                                        <div class="space-y-1">
+                                            <div class="font-medium">Android (Chrome)</div>
+                                            <div class="text-muted-foreground">
+                                                Tocca <span class="font-medium text-foreground">Installa app</span> oppure:
+                                                menu ⋮ → <span class="font-medium text-foreground">Installa app</span>.
+                                            </div>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="font-medium">iPhone/iPad (Safari)</div>
+                                            <div class="text-muted-foreground">
+                                                Tocca <span class="font-medium text-foreground">Condividi</span> →
+                                                <span class="font-medium text-foreground">Aggiungi a Home</span>.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <Dialog.Footer class="mt-6">
+                                        <Dialog.Close>
+                                            {#snippet child({ props })}
+                                                <Button {...props} variant="outline">Chiudi</Button>
+                                            {/snippet}
+                                        </Dialog.Close>
+                                    </Dialog.Footer>
+                                </Dialog.Content>
+                            </Dialog.Root>
+                        </div>
+                    </div>
                     <a
                         href="#come-funziona"
                         class={cn(buttonVariants({ variant: "outline" }), "sm:w-auto")}

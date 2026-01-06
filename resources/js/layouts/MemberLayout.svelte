@@ -1,8 +1,11 @@
 <script>
 	/* eslint-disable */
-	import * as Sidebar from "@/lib/components/ui/sidebar/index.js";
-	import SiteHeader from "@/lib/components/site-header.svelte";
-	import MemberSidebar from "@/lib/components/member-sidebar.svelte";
+	import MemberBottomNav from "@/lib/components/member-bottom-nav.svelte";
+	import FlashToasts from "@/lib/components/FlashToasts.svelte";
+	import { Toaster } from "svelte-sonner";
+	import { Button } from "@/lib/components/ui/button";
+	import ThemeToggle from "@/lib/components/theme-toggle.svelte";
+	import { router, page } from "@inertiajs/svelte";
 
 	let { title = "Socio", children, headerActions } = $props();
 </script>
@@ -11,22 +14,46 @@
 	<title>{title} · Pro Loco</title>
 </svelte:head>
 
-<Sidebar.Provider
-	style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
->
-	<MemberSidebar variant="inset" />
-	<Sidebar.Inset>
-		<SiteHeader {title} {headerActions} />
-		<div class="flex flex-1 flex-col">
-			<div class="@container/main flex flex-1 flex-col gap-2">
-				<div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-					<div class="px-4 lg:px-6">
-						{@render children()}
-					</div>
+<div class="min-h-screen bg-background text-foreground">
+	<FlashToasts />
+	<Toaster richColors />
+
+	<header class="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+		<div class="mx-auto flex max-w-xl items-center justify-between gap-3 px-4 py-3">
+			<div class="min-w-0">
+				<div class="flex items-center gap-2">
+					<img
+						src="/logo.png"
+						alt="Pro Loco Venticanese"
+						class="h-7 w-7 shrink-0 rounded-md border bg-background object-contain"
+						loading="eager"
+					/>
+					<div class="truncate text-base font-semibold">{title}</div>
 				</div>
 			</div>
+			<div class="flex items-center gap-2">
+				{@render headerActions?.()}
+				<ThemeToggle />
+				<Button
+					variant="ghost"
+					size="icon"
+					onclick={() => router.post("/logout")}
+					aria-label="Esci"
+					title="Esci"
+				>
+					<span class="sr-only">Esci</span>
+					<!-- simple text fallback; icons live in pages/nav -->
+					<span class="text-sm">⎋</span>
+				</Button>
+			</div>
 		</div>
-	</Sidebar.Inset>
-</Sidebar.Provider>
+	</header>
+
+	<main class="mx-auto max-w-xl px-4 py-4 pb-24">
+		{@render children?.()}
+	</main>
+
+	<MemberBottomNav />
+</div>
 
 

@@ -687,3 +687,53 @@ pg_dump: detail: server version: 18.1 (Debian 18.1-1.pgdg13+2); pg_dump version:
 #19 /app/artisan(17): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
 #20 {main}
 "} 
+[2026-01-06 18:12:16] production.ERROR: The command "pg_dump --no-owner --no-acl --host="${:LARAVEL_LOAD_HOST}" --port="${:LARAVEL_LOAD_PORT}" --username="${:LARAVEL_LOAD_USER}" --dbname="${:LARAVEL_LOAD_DATABASE}" --schema-only > /app/database/schema/pgsql-schema.sql" failed.
+
+Exit Code: 127(Command not found)
+
+Working directory: /app
+
+Output:
+================
+
+
+Error Output:
+================
+sh: 1: pg_dump: not found
+ {"exception":"[object] (Symfony\\Component\\Process\\Exception\\ProcessFailedException(code: 0): The command \"pg_dump --no-owner --no-acl --host=\"${:LARAVEL_LOAD_HOST}\" --port=\"${:LARAVEL_LOAD_PORT}\" --username=\"${:LARAVEL_LOAD_USER}\" --dbname=\"${:LARAVEL_LOAD_DATABASE}\" --schema-only > /app/database/schema/pgsql-schema.sql\" failed.
+
+Exit Code: 127(Command not found)
+
+Working directory: /app
+
+Output:
+================
+
+
+Error Output:
+================
+sh: 1: pg_dump: not found
+ at /app/vendor/symfony/process/Process.php:275)
+[stacktrace]
+#0 /app/vendor/laravel/framework/src/Illuminate/Database/Schema/PostgresSchemaState.php(28): Symfony\\Component\\Process\\Process->mustRun(Object(Closure), Array)
+#1 [internal function]: Illuminate\\Database\\Schema\\PostgresSchemaState->{closure:Illuminate\\Database\\Schema\\PostgresSchemaState::dump():27}('pg_dump --no-ow...', 0)
+#2 /app/vendor/laravel/framework/src/Illuminate/Collections/Arr.php(788): array_map(Object(Closure), Array, Array)
+#3 /app/vendor/laravel/framework/src/Illuminate/Collections/Collection.php(819): Illuminate\\Support\\Arr::map(Array, Object(Closure))
+#4 /app/vendor/laravel/framework/src/Illuminate/Database/Schema/PostgresSchemaState.php(27): Illuminate\\Support\\Collection->map(Object(Closure))
+#5 /app/vendor/laravel/framework/src/Illuminate/Database/Console/DumpCommand.php(53): Illuminate\\Database\\Schema\\PostgresSchemaState->dump(Object(Illuminate\\Database\\PostgresConnection), '/app/database/s...')
+#6 /app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate\\Database\\Console\\DumpCommand->handle(Object(Illuminate\\Database\\DatabaseManager), Object(Illuminate\\Events\\Dispatcher))
+#7 /app/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::{closure:Illuminate\\Container\\BoundMethod::call():35}()
+#8 /app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(96): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#9 /app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#10 /app/vendor/laravel/framework/src/Illuminate/Container/Container.php(799): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#11 /app/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\\Container\\Container->call(Array)
+#12 /app/vendor/symfony/console/Command/Command.php(341): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#13 /app/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#14 /app/vendor/symfony/console/Application.php(1102): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#15 /app/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Illuminate\\Database\\Console\\DumpCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#16 /app/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#17 /app/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#18 /app/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#19 /app/artisan(17): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#20 {main}
+"} 

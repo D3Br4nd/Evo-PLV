@@ -158,7 +158,7 @@
                 </Card.Header>
                 <Card.Content class="p-0">
                     <Table.Root>
-                        <Table.Header>
+                        <Table.Header class="bg-muted">
                             <Table.Row>
                                 <Table.Head>Titolo</Table.Head>
                                 <Table.Head>Slug</Table.Head>
@@ -189,16 +189,19 @@
                                             <Badge variant="secondary">Bozza</Badge>
                                         {/if}
                                     </Table.Cell>
-                                    <Table.Cell class="text-right space-x-2">
-                                        <Button variant="outline" size="sm" onclick={() => edit(p)}
-                                            >Modifica</Button
-                                        >
+                                    <Table.Cell class="text-right">
+                                        <div class="flex justify-end gap-2">
+                                        <Button variant="outline" size="sm" onclick={() => edit(p)}>
+                                            Modifica
+                                        </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onclick={() => remove(p.id)}
-                                            >Elimina</Button
                                         >
+                                            Elimina
+                                        </Button>
+                                        </div>
                                     </Table.Cell>
                                 </Table.Row>
                             {/each}
