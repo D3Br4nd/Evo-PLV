@@ -13,6 +13,8 @@ class Membership extends Model
     protected $fillable = [
         'user_id',
         'year',
+        'paid_at',
+        'amount',
         'qr_token',
         'status',
     ];

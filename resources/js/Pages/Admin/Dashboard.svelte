@@ -15,74 +15,85 @@
 <AdminLayout title="Dashboard">
     <div class="space-y-6">
         {#snippet headerActions()}
-            <Button variant="outline" onclick={() => router.get("/admin/members")}>
+            <Button
+                variant="outline"
+                onclick={() => router.get("/admin/members")}
+            >
                 Vai ai soci
             </Button>
         {/snippet}
 
         <p class="text-sm text-muted-foreground">
-                Benvenuto nel pannello amministrativo Pro Loco Venticanese
-            </p>
+            Benvenuto nel pannello amministrativo Pro Loco Venticanese
+        </p>
 
         <!-- Stats Grid -->
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-lg border border-border bg-card p-6">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-medium text-muted-foreground">
-                        Soci Totali
-                    </h3>
-                </div>
-                <div class="mt-2">
-                    <p class="text-3xl font-bold text-foreground">{stats?.membersTotal ?? 0}</p>
-                    <p class="mt-1 text-xs text-muted-foreground">
-                        Attivi ({new Date().getFullYear()}): {stats?.membersActive ?? 0}
+            <Card.Root>
+                <Card.Header
+                    class="flex flex-row items-center justify-between space-y-0 pb-2"
+                >
+                    <Card.Title class="text-sm font-medium"
+                        >Soci Totali</Card.Title
+                    >
+                </Card.Header>
+                <Card.Content>
+                    <div class="text-2xl font-bold">
+                        {stats?.membersTotal ?? 0}
+                    </div>
+                    <p class="text-xs text-muted-foreground">
+                        Attivi ({new Date().getFullYear()}): {stats?.membersActive ??
+                            0}
                     </p>
-                </div>
-            </div>
+                </Card.Content>
+            </Card.Root>
 
-            <div class="rounded-lg border border-border bg-card p-6">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-medium text-muted-foreground">
-                        Eventi
-                    </h3>
-                </div>
-                <div class="mt-2">
-                    <p class="text-3xl font-bold text-foreground">{stats?.eventsTotal ?? 0}</p>
-                    <p class="mt-1 text-xs text-muted-foreground">
+            <Card.Root>
+                <Card.Header
+                    class="flex flex-row items-center justify-between space-y-0 pb-2"
+                >
+                    <Card.Title class="text-sm font-medium">Eventi</Card.Title>
+                </Card.Header>
+                <Card.Content>
+                    <div class="text-2xl font-bold">
+                        {stats?.eventsTotal ?? 0}
+                    </div>
+                    <p class="text-xs text-muted-foreground">
                         In programma: {stats?.eventsUpcoming ?? 0}
                     </p>
-                </div>
-            </div>
+                </Card.Content>
+            </Card.Root>
 
-            <div class="rounded-lg border border-border bg-card p-6">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-medium text-muted-foreground">
-                        Task
-                    </h3>
-                </div>
-                <div class="mt-2">
-                    <p class="text-3xl font-bold text-foreground">{stats?.projectsTotal ?? 0}</p>
-                    <p class="mt-1 text-xs text-muted-foreground">
+            <Card.Root>
+                <Card.Header
+                    class="flex flex-row items-center justify-between space-y-0 pb-2"
+                >
+                    <Card.Title class="text-sm font-medium">Task</Card.Title>
+                </Card.Header>
+                <Card.Content>
+                    <div class="text-2xl font-bold">
+                        {stats?.projectsTotal ?? 0}
+                    </div>
+                    <p class="text-xs text-muted-foreground">
                         Completati: {stats?.projectsDone ?? 0}
                     </p>
-                </div>
-            </div>
+                </Card.Content>
+            </Card.Root>
 
-            <div class="rounded-lg border border-border bg-card p-6">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-medium text-muted-foreground">
-                        Contenuti
-                    </h3>
-                </div>
-                <div class="mt-2">
-                    <p class="text-3xl font-bold text-foreground">—</p>
-                    <p class="mt-1 text-xs text-muted-foreground">
-                        (in arrivo)
-                    </p>
-                </div>
-            </div>
+            <Card.Root>
+                <Card.Header
+                    class="flex flex-row items-center justify-between space-y-0 pb-2"
+                >
+                    <Card.Title class="text-sm font-medium"
+                        >Contenuti</Card.Title
+                    >
+                </Card.Header>
+                <Card.Content>
+                    <div class="text-2xl font-bold">—</div>
+                    <p class="text-xs text-muted-foreground">(in arrivo)</p>
+                </Card.Content>
+            </Card.Root>
         </div>
-
         <Card.Root>
             <Card.Header>
                 <Card.Title>Attività recenti</Card.Title>
@@ -103,8 +114,12 @@
                         {#if activity?.data?.length}
                             {#each activity.data as a (a.id)}
                                 <Table.Row>
-                                    <Table.Cell class="text-xs text-muted-foreground">
-                                        {new Date(a.created_at).toLocaleString("it-IT")}
+                                    <Table.Cell
+                                        class="text-xs text-muted-foreground"
+                                    >
+                                        {new Date(a.created_at).toLocaleString(
+                                            "it-IT",
+                                        )}
                                     </Table.Cell>
                                     <Table.Cell class="text-sm">
                                         {a.actor?.name || "Sistema"}
@@ -116,7 +131,10 @@
                             {/each}
                         {:else}
                             <Table.Row>
-                                <Table.Cell colspan="3" class="text-sm text-muted-foreground">
+                                <Table.Cell
+                                    colspan="3"
+                                    class="text-sm text-muted-foreground"
+                                >
                                     Nessuna attività da mostrare.
                                 </Table.Cell>
                             </Table.Row>
@@ -125,9 +143,12 @@
                 </Table.Root>
             </Card.Content>
             {#if activity?.links?.length}
-                <Card.Content class="flex items-center justify-between gap-3 border-t p-4">
+                <Card.Content
+                    class="flex items-center justify-between gap-3 border-t p-4"
+                >
                     <div class="text-xs text-muted-foreground">
-                        {activity?.meta?.from || 0}-{activity?.meta?.to || 0} di {activity?.meta?.total || 0}
+                        {activity?.meta?.from || 0}-{activity?.meta?.to || 0} di
+                        {activity?.meta?.total || 0}
                     </div>
                     <div class="flex items-center gap-2">
                         <Button

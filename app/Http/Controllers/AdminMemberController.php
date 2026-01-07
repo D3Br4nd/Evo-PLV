@@ -17,9 +17,12 @@ use App\Mail\MemberInvitationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class AdminMemberController extends Controller
 {
+    use AuthorizesRequests;
+
     private const PLV_ROLES = [
         'PRESIDENTE',
         'VICE PRESIDENTE',
@@ -69,7 +72,24 @@ class AdminMemberController extends Controller
         $pendingInvites = MemberInvitation::query()
             ->whereNull('used_at')
             ->where('expires_at', '>', now())
+            ->whereHas('user', fn($q) => $q->where('must_set_password', true))
             ->count();
+
+        // Chart Data: Status Distribution
+        $statusDistribution = [
+            'active' => $activeMatching,
+            'expired' => max(0, $totalMatching - $activeMatching),
+            'pending' => $pendingInvites,
+        ];
+
+        // Chart Data: Role Distribution (PLV Roles)
+        $roleDistribution = User::query()
+            ->selectRaw('COALESCE(plv_role, \'Socio\') as role_label, count(*) as count')
+            ->whereNotNull('plv_role') // Only show assigned roles + 'Socio' if we wanted, but let's stick to assigned special roles
+            ->groupBy('plv_role')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => ['role' => $item->role_label, 'visitors' => $item->count]); // 'visitors' matches shadcn chart example props often
 
         return Inertia::render('Admin/Members/Index', [
             'users' => $query->paginate($perPage)->withQueryString(),
@@ -80,6 +100,10 @@ class AdminMemberController extends Controller
                 'active' => $activeMatching,
                 'expired' => max(0, $totalMatching - $activeMatching),
                 'pendingInvites' => $pendingInvites,
+            ],
+            'chartData' => [
+                'status' => $statusDistribution,
+                'roles' => $roleDistribution,
             ],
         ]);
     }
@@ -93,6 +117,7 @@ class AdminMemberController extends Controller
 
         $member->load([
             'memberships' => fn($q) => $q->where('year', $year),
+            'invitations' => fn($q) => $q->whereNull('used_at')->where('expires_at', '>', now())->latest(),
         ]);
 
         return Inertia::render('Admin/Members/Show', [
@@ -177,6 +202,15 @@ class AdminMemberController extends Controller
             'summary' => 'Creato socio: '.$member->name.($member->email ? ' ('.$member->email.')' : ''),
         ]);
 
+        // Auto-activate membership for the current year
+        $currentYear = now()->year;
+        $member->memberships()->create([
+            'year' => $currentYear,
+            'paid_at' => now(), 
+            'amount' => 0,
+            'qr_token' => (string) \Illuminate\Support\Str::uuid(),
+        ]);
+
         // Create invitation + email
         $token = Str::random(64);
         $inviteUrl = url("/invite/{$token}");
@@ -258,8 +292,12 @@ class AdminMemberController extends Controller
             ARRAY_FILTER_USE_BOTH
         );
 
-        if (array_key_exists('role', $validated) && $validated['role'] !== $member->role) {
-            $this->authorize('manage-roles');
+        if (array_key_exists('role', $validated)) {
+             // Access raw value to avoid strict Enum casting errors if DB has invalid/legacy string
+             $currentRole = $member->getRawOriginal('role');
+             if ($validated['role'] !== $currentRole) {
+                 $this->authorize('manage-roles');
+             }
         }
 
         if (array_key_exists('plv_joined_at', $validated)) {
@@ -270,7 +308,12 @@ class AdminMemberController extends Controller
             }
         }
 
-        $member->update($validated);
+        try {
+            $member->update($validated);
+        } catch (\Throwable $e) {
+            Log::error('Update Member Failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            throw $e;
+        }
 
         ActivityLog::create([
             'actor_user_id' => $request->user()?->id,

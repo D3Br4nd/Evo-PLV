@@ -32,6 +32,22 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        Gate::define('manage-roles', fn ($user) => $user?->role === UserRole::SuperAdmin->value);
+        Gate::define('view-admin-roles', function ($user) {
+            if (!$user) return false;
+            
+            $role = is_object($user->role) && enum_exists(get_class($user->role)) 
+                ? $user->role->value 
+                : $user->role;
+
+            return in_array($role, ['super_admin', 'admin']);
+        });
+
+        // Alias for controller authorization
+        Gate::define('manage-roles', function ($user) {
+            // Because we cast `role` to Enum in User model, accessing $user->role returns the Enum instance.
+            // We use the same loose check logic as view-admin-roles.
+            $roleVal = $user->role instanceof \UnitEnum ? $user->role->value : $user->role;
+            return in_array($roleVal, ['super_admin']);
+        });
     }
 }

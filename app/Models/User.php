@@ -80,6 +80,7 @@ class User extends Authenticatable
             'plv_joined_at' => 'date',
             'plv_expires_at' => 'date',
             'must_set_password' => 'boolean',
+            'role' => \App\Enums\UserRole::class,
         ];
     }
 
@@ -98,5 +99,10 @@ class User extends Authenticatable
     public function memberships()
     {
         return $this->hasMany(Membership::class);
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(MemberInvitation::class);
     }
 }

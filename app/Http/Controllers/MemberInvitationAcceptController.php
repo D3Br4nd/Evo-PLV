@@ -54,6 +54,17 @@ class MemberInvitationAcceptController extends Controller
             'must_set_password' => false,
         ])->save();
 
+        // Auto-activate membership for the current year
+        $currentYear = now()->year;
+        if (! $user->memberships()->where('year', $currentYear)->exists()) {
+            $user->memberships()->create([
+                'year' => $currentYear,
+                'paid_at' => now(), 
+                'amount' => 0,
+                'qr_token' => (string) \Illuminate\Support\Str::uuid(),
+            ]);
+        }
+
         $invitation->update(['used_at' => now()]);
 
         Auth::login($user);

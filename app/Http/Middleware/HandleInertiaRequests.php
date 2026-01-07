@@ -68,7 +68,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $authUser,
                 'can' => [
-                    'manageRoles' => $user ? $user->can('manage-roles') : false,
+                    // Direct check to bypass Gate issues for now
+                    'viewAdminRoles' => $user ? in_array($user->role instanceof \UnitEnum ? $user->role->value : $user->role, ['super_admin', 'admin']) : false,
+                    'manageRoles' => $user ? ($user->role instanceof \UnitEnum ? $user->role->value : $user->role) === 'super_admin' : false,
                 ],
             ],
         ];

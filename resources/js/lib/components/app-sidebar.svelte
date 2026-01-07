@@ -53,11 +53,29 @@
 	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:!p-1.5">
+				<Sidebar.MenuButton
+					size="lg"
+					class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+				>
 					{#snippet child({ props })}
 						<a href="/admin/dashboard" {...props}>
-							<InnerShadowTopIcon class="!size-5" />
-							<span class="text-base font-semibold">Pro Loco Admin</span>
+							<div
+								class="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden"
+							>
+								<img
+									src="/logo.png"
+									alt="Pro Loco Logo"
+									class="size-full object-cover"
+								/>
+							</div>
+							<div
+								class="grid flex-1 text-left text-sm leading-tight"
+							>
+								<span class="truncate font-semibold"
+									>Pro Loco Venticanese</span
+								>
+								<span class="truncate text-xs">Evolution</span>
+							</div>
 						</a>
 					{/snippet}
 				</Sidebar.MenuButton>
@@ -69,6 +87,6 @@
 		<NavDocuments items={data.documents} />
 	</Sidebar.Content>
 	<Sidebar.Footer>
-		<NavUser user={user} />
+		<NavUser {user} />
 	</Sidebar.Footer>
 </Sidebar.Root>

@@ -22,7 +22,7 @@ class AdminMemberInvitationController extends Controller
             'user_id' => $member->id,
             'created_by_user_id' => request()->user()?->id,
             'token_hash' => hash('sha256', $token),
-            'expires_at' => now()->addDays(7),
+            'expires_at' => now()->addHours(24),
         ]);
 
         // Send email (requires mail config in .env)
@@ -42,8 +42,20 @@ class AdminMemberInvitationController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', $mailSent ? 'Link invito generato e inviato via email.' : 'Link invito generato. Email non inviata: copia il link e invialo manualmente.')
+            ->with('success', $mailSent ? 'Link invito generato e inviato via email (valido 24 ore).' : 'Link invito generato (valido 24 ore). Email non inviata.')
             ->with('invite_url', $inviteUrl);
+    }
+
+    public function destroy(User $member): RedirectResponse
+    {
+        // Delete all pending/unused invitations for this user
+        $member->invitations()
+            ->whereNull('used_at')
+            ->delete();
+
+        return redirect()
+            ->back()
+            ->with('success', 'Inviti annullati con successo.');
     }
 }
 

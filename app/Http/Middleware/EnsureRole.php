@@ -23,7 +23,9 @@ class EnsureRole
             return $next($request);
         }
 
-        if (! in_array($user->role, $roles, true)) {
+        $userRole = $user->role instanceof \UnitEnum ? $user->role->value : $user->role;
+
+        if (! in_array($userRole, $roles)) {
             abort(403);
         }
 

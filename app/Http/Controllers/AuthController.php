@@ -78,7 +78,7 @@ class AuthController extends Controller
                 }
             }
 
-            if ($isAdmin) return redirect()->intended('/admin/dashboard');
+            if ($isAdmin) return redirect()->intended('/admin/members');
 
             return $user->must_set_password
                 ? redirect()->intended('/me/onboarding')

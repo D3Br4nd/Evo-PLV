@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\AdminMemberInvitationController;
+use App\Http\Controllers\AdminMembershipController;
 use App\Http\Controllers\MemberInvitationAcceptController;
 use App\Http\Controllers\MemberCardController;
 use App\Http\Controllers\MemberEventsController;
@@ -105,6 +106,13 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(fu
     Route::resource('members', \App\Http\Controllers\AdminMemberController::class);
     Route::post('members/{member}/invite', [AdminMemberInvitationController::class, 'store'])
         ->name('members.invite.store');
+    Route::delete('members/{member}/invite', [AdminMemberInvitationController::class, 'destroy'])
+        ->name('members.invite.destroy');
+
+    Route::post('members/{member}/membership', [AdminMembershipController::class, 'store'])
+        ->name('members.membership.store');
+    Route::delete('members/{member}/membership', [AdminMembershipController::class, 'destroy'])
+        ->name('members.membership.destroy');
     Route::patch('members/{member}/role', \App\Http\Controllers\AdminMemberRoleController::class.'@update')
         ->name('members.role.update')
         ->middleware('role:super_admin');

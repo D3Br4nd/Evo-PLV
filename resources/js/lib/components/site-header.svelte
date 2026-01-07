@@ -1,17 +1,19 @@
 <script>
 	import { Separator } from "@/lib/components/ui/separator/index.js";
 	import * as Sidebar from "@/lib/components/ui/sidebar/index.js";
+	import ThemeToggle from "@/lib/components/theme-toggle.svelte";
 
 	let { title = "Dashboard", headerActions } = $props();
 
 	function todayLabel() {
 		try {
-			return new Date().toLocaleDateString("it-IT", {
+			const d = new Date().toLocaleDateString("it-IT", {
 				weekday: "short",
 				day: "2-digit",
 				month: "long",
 				year: "numeric",
 			});
+			return d.charAt(0).toUpperCase() + d.slice(1);
 		} catch {
 			return "";
 		}
@@ -23,10 +25,18 @@
 >
 	<div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
 		<Sidebar.Trigger class="-ms-1" />
-		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
+		<Separator
+			orientation="vertical"
+			class="mx-2 data-[orientation=vertical]:h-4"
+		/>
 		<h1 class="text-base font-medium">{title}</h1>
 		<div class="ms-auto flex items-center gap-2">
-			<span class="hidden text-sm text-muted-foreground md:inline">{todayLabel()}</span>
+			<span class="hidden text-sm text-muted-foreground md:inline"
+				>{todayLabel()}</span
+			>
+			<div class="hidden md:flex">
+				<ThemeToggle />
+			</div>
 			{@render headerActions?.()}
 		</div>
 	</div>
