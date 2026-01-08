@@ -17,19 +17,25 @@ class AdminEventController extends Controller
     {
         $year = $request->input('year', Carbon::now()->year);
         $month = $request->input('month', Carbon::now()->month);
+        $filterType = $request->input('type', null);
 
         $date = Carbon::createFromDate($year, $month, 1);
         $start = $date->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY);
         $end = $date->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
 
-        $events = Event::whereBetween('start_date', [$start, $end])
-            ->orWhereBetween('end_date', [$start, $end])
-            ->orderBy('start_date')
-            ->get();
+        $query = Event::whereBetween('start_date', [$start, $end])
+            ->orWhereBetween('end_date', [$start, $end]);
+
+        if ($filterType) {
+            $query->where('type', $filterType);
+        }
+
+        $events = $query->orderBy('start_date')->get();
 
         return Inertia::render('Admin/Events/Calendar', [
             'events' => $events,
             'currentDate' => $date->format('Y-m-d'),
+            'filterType' => $filterType,
         ]);
     }
 
@@ -42,7 +48,7 @@ class AdminEventController extends Controller
             'title' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'type' => 'required|string|in:fair,festival,meeting',
+            'type' => 'required|string|in:meeting,event,fair,other',
             'metadata' => 'nullable|array',
         ]);
 
@@ -68,7 +74,7 @@ class AdminEventController extends Controller
             'title' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'type' => 'required|string|in:fair,festival,meeting',
+            'type' => 'required|string|in:meeting,event,fair,other',
             'metadata' => 'nullable|array',
         ]);
 

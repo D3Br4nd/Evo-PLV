@@ -9,13 +9,15 @@
     import { Badge } from "@/lib/components/ui/badge";
     import * as Card from "@/lib/components/ui/card";
     import * as Dialog from "@/lib/components/ui/dialog";
+    import * as Select from "@/lib/components/ui/select";
 
-    let { events, currentDate } = $props();
+    let { events, currentDate, filterType = null } = $props();
 
     // State for Date Navigation
     let current = $derived(new Date(currentDate));
-    let headerTitle = $derived.by(() =>
-        `Eventi · ${current.toLocaleString("it-IT", { month: "long", year: "numeric" })}`,
+    let headerTitle = $derived.by(
+        () =>
+            `Eventi · ${current.toLocaleString("it-IT", { month: "long", year: "numeric" })}`,
     );
 
     // Calendar Generation Logic
@@ -58,11 +60,30 @@
     function visit(date) {
         let year = date.getFullYear();
         let month = date.getMonth() + 1;
-        router.get(
-            "/admin/events",
-            { year, month },
-            { preserveState: false },
-        );
+        const params = { year, month };
+
+        if (filterType) {
+            params.type = filterType;
+        }
+
+        router.get("/admin/events", params, { preserveState: false });
+    }
+
+    function setFilter(type) {
+        const params = {
+            year: current.getFullYear(),
+            month: current.getMonth() + 1,
+        };
+
+        if (type) {
+            params.type = type;
+        }
+
+        router.get("/admin/events", params, { preserveState: false });
+    }
+
+    function clearFilter() {
+        setFilter(null);
     }
 
     function getEventsForDay(date) {
@@ -74,6 +95,17 @@
             const end = e.end_date.split("T")[0];
             return dateStr >= start && dateStr <= end;
         });
+    }
+
+    // Get color class for event type
+    function getEventColor(type) {
+        const colors = {
+            meeting: "bg-blue-500 text-white",
+            event: "bg-green-500 text-white",
+            fair: "bg-purple-500 text-white",
+            other: "bg-gray-500 text-white",
+        };
+        return colors[type] || colors.other;
     }
 
     // Dialog State
@@ -88,6 +120,8 @@
         title: "",
         start_date: "",
         end_date: "",
+        start_time: "09:00",
+        end_time: "18:00",
         type: "fair",
     });
 
@@ -97,9 +131,11 @@
         eventForm = {
             id: null,
             title: "",
-            start_date: dateStr, // Default to clicked date (needs time handling in real app)
+            start_date: dateStr,
             end_date: dateStr,
-            type: "fair",
+            start_time: "09:00",
+            end_time: "18:00",
+            type: "meeting",
         };
         isNewEventOpen = true;
         isEditEventOpen = false;
@@ -108,12 +144,24 @@
 
     function openEditEvent(event, e) {
         e.stopPropagation();
+        e.preventDefault();
         selectedEvent = event;
+
+        // Extract time from ISO datetime string (format: "2024-01-15T14:30:00")
+        const extractTime = (dateTimeStr) => {
+            if (!dateTimeStr) return "09:00";
+            const parts = dateTimeStr.split("T");
+            if (parts.length < 2) return "09:00";
+            return parts[1].substring(0, 5); // Get HH:MM from HH:MM:SS
+        };
+
         eventForm = {
             id: event.id,
             title: event.title,
-            start_date: event.start_date.split("T")[0], // Simplified for date input
+            start_date: event.start_date.split("T")[0],
             end_date: event.end_date.split("T")[0],
+            start_time: extractTime(event.start_date),
+            end_time: extractTime(event.end_date),
             type: event.type,
         };
         isEditEventOpen = true;
@@ -126,22 +174,16 @@
         isEditEventOpen = false;
         isDialogOpen = false;
         selectedEvent = null;
+        loading = false;
     }
-
-    // If the dialog is closed via overlay/escape, keep flags in sync.
-    $effect(() => {
-        if (!isDialogOpen && (isNewEventOpen || isEditEventOpen)) {
-            closeDialogs();
-        }
-    });
 
     function submitEvent() {
         loading = true;
         const data = {
-            ...eventForm,
-            // Add default times for simplicity as inputs are date only for now
-            start_date: eventForm.start_date + " 09:00:00",
-            end_date: eventForm.end_date + " 23:59:59",
+            title: eventForm.title,
+            type: eventForm.type,
+            start_date: `${eventForm.start_date} ${eventForm.start_time}:00`,
+            end_date: `${eventForm.end_date} ${eventForm.end_time}:00`,
         };
 
         if (eventForm.id) {
@@ -171,6 +213,13 @@
 
 <AdminLayout title={headerTitle}>
     {#snippet headerActions()}
+        <!-- Empty header actions -->
+    {/snippet}
+
+    <div class="h-full flex flex-col space-y-4">
+        <!-- Toolbar con navigazione e filtro -->
+        <div class="flex items-center justify-between gap-4 pb-4 border-b">
+            <div class="flex items-center gap-2">
                 <Button
                     variant="outline"
                     size="icon"
@@ -187,10 +236,36 @@
                 >
                     <ChevronRight />
                 </Button>
-            <Button onclick={() => openNewEvent(new Date())}>Nuovo evento</Button>
-    {/snippet}
+            </div>
 
-    <div class="h-full flex flex-col space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-muted-foreground">Tipo:</span>
+                    <Select.Root
+                        value={filterType || "all"}
+                        onValueChange={(v) => setFilter(v === "all" ? null : v)}
+                    >
+                        <Select.Trigger class="w-[180px]">
+                            <Select.Value placeholder="Filtra per tipo" />
+                        </Select.Trigger>
+                        <Select.Content>
+                            <Select.Item value="all"
+                                >Tutti gli eventi</Select.Item
+                            >
+                            <Select.Item value="meeting">Riunione</Select.Item>
+                            <Select.Item value="event">Evento</Select.Item>
+                            <Select.Item value="fair">Fiera</Select.Item>
+                            <Select.Item value="other">Altro</Select.Item>
+                        </Select.Content>
+                    </Select.Root>
+                </div>
+
+                <Button onclick={() => openNewEvent(new Date())}>
+                    Nuovo evento
+                </Button>
+            </div>
+        </div>
+
         <!-- Calendar Grid -->
         <div
             class="grid grid-cols-7 gap-px bg-border border border-border rounded-lg overflow-hidden flex-1"
@@ -235,13 +310,13 @@
                                         e.key === "Enter" &&
                                         openEditEvent(event, e)}
                                 >
-                                    {#if event.type === "fair"}
-                                        <Badge>{event.title}</Badge>
-                                    {:else if event.type === "festival"}
-                                        <Badge variant="secondary">{event.title}</Badge>
-                                    {:else}
-                                        <Badge variant="outline">{event.title}</Badge>
-                                    {/if}
+                                    <span
+                                        class="text-xs px-2 py-1 rounded-md font-medium {getEventColor(
+                                            event.type,
+                                        )}"
+                                    >
+                                        {event.title}
+                                    </span>
                                 </div>
                             {/each}
                         </div>
@@ -254,28 +329,60 @@
     <!-- Dialog (Crea/Modifica) -->
     <Dialog.Root
         bind:open={isDialogOpen}
+        onOpenChange={(open) => {
+            if (!open) {
+                closeDialogs();
+            }
+        }}
     >
         <Dialog.Content class="max-w-md">
             <Dialog.Header>
                 <Dialog.Title>
                     {isEditEventOpen ? "Modifica evento" : "Nuovo evento"}
                 </Dialog.Title>
-                <Dialog.Description>Inserisci i dettagli base.</Dialog.Description>
+                <Dialog.Description
+                    >Inserisci i dettagli base.</Dialog.Description
+                >
             </Dialog.Header>
 
             <div class="mt-4 space-y-3">
                 <Input bind:value={eventForm.title} placeholder="Titolo" />
                 <div class="grid grid-cols-2 gap-2">
-                    <Input bind:value={eventForm.start_date} type="date" />
-                    <Input bind:value={eventForm.end_date} type="date" />
+                    <label class="block">
+                        <span class="text-xs text-muted-foreground mb-1 block"
+                            >Data inizio</span
+                        >
+                        <Input bind:value={eventForm.start_date} type="date" />
+                    </label>
+                    <label class="block">
+                        <span class="text-xs text-muted-foreground mb-1 block"
+                            >Data fine</span
+                        >
+                        <Input bind:value={eventForm.end_date} type="date" />
+                    </label>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="block">
+                        <span class="text-xs text-muted-foreground mb-1 block"
+                            >Ora inizio</span
+                        >
+                        <Input bind:value={eventForm.start_time} type="time" />
+                    </label>
+                    <label class="block">
+                        <span class="text-xs text-muted-foreground mb-1 block"
+                            >Ora fine</span
+                        >
+                        <Input bind:value={eventForm.end_time} type="time" />
+                    </label>
                 </div>
                 <select
                     bind:value={eventForm.type}
                     class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
-                    <option value="fair">Fiera</option>
-                    <option value="festival">Sagra/Festival</option>
                     <option value="meeting">Riunione</option>
+                    <option value="event">Evento</option>
+                    <option value="fair">Fiera</option>
+                    <option value="other">Altro</option>
                 </select>
             </div>
 
@@ -303,8 +410,10 @@
                     {/if}
                     <Dialog.Close>
                         {#snippet child({ props })}
-                            <Button {...props} variant="outline" disabled={loading}
-                                >Annulla</Button
+                            <Button
+                                {...props}
+                                variant="outline"
+                                disabled={loading}>Annulla</Button
                             >
                         {/snippet}
                     </Dialog.Close>
