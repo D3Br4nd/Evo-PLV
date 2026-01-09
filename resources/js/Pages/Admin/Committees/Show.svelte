@@ -4,7 +4,9 @@
     import * as Card from "@/lib/components/ui/card";
     import * as Dialog from "@/lib/components/ui/dialog";
     import * as Select from "@/lib/components/ui/select";
-    import { Combobox } from "bits-ui";
+    import * as Popover from "@/lib/components/ui/popover";
+    import * as Command from "@/lib/components/ui/command";
+    import { cn } from "@/lib/utils";
     import * as Table from "@/lib/components/ui/table";
     import { Input } from "@/lib/components/ui/input";
     import { Label } from "@/lib/components/ui/label";
@@ -23,22 +25,10 @@
 
     let addMemberDialogOpen = $state(false);
     let createPostDialogOpen = $state(false);
+    let openCombobox = $state(false);
 
     let selectedMemberId = $state(null);
     let memberRole = $state("");
-    let searchTerm = $state("");
-    let selectedMember = $state(undefined);
-
-    let filteredMembers = $derived(
-        availableMembers.filter(
-            (item) =>
-                item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (item.email &&
-                    item.email
-                        .toLowerCase()
-                        .includes(searchTerm.toLowerCase())),
-        ),
-    );
 
     let postFormData = $state({
         title: "",
@@ -289,61 +279,72 @@
                 <div class="space-y-2">
                     <Label>Socio <span class="text-red-500">*</span></Label>
                     <div class="relative">
-                        <Combobox.Root
-                            items={availableMembers}
-                            bind:inputValue={searchTerm}
-                            bind:selected={selectedMember}
-                            onSelectedChange={(v) => {
-                                selectedMemberId = v?.value;
-                            }}
-                        >
-                            <div class="relative w-full">
-                                <Combobox.Input
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="Cerca socio..."
-                                />
-                                <Combobox.Trigger
-                                    class="absolute right-0 top-0 h-full px-2"
-                                >
-                                    <SelectorIcon
-                                        class="size-4 text-muted-foreground"
-                                    />
-                                </Combobox.Trigger>
-                            </div>
-
-                            <Combobox.Content
-                                class="mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-black ring-opacity-5 focus:outline-none"
-                            >
-                                {#each filteredMembers as member (member.id)}
-                                    <Combobox.Item
-                                        value={member.id}
-                                        label={member.name}
-                                        class="npm relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        <Popover.Root bind:open={openCombobox}>
+                            <Popover.Trigger>
+                                {#snippet child({ props })}
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        {...props}
+                                        class="w-full justify-between"
                                     >
-                                        {#if selectedMemberId === member.id}
-                                            <span
-                                                class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center"
-                                            >
-                                                <CheckIcon class="h-4 w-4" />
-                                            </span>
-                                        {/if}
-                                        <div class="flex flex-col">
-                                            <span>{member.name}</span>
-                                            {#if member.email}
-                                                <span
-                                                    class="text-xs text-muted-foreground"
-                                                    >{member.email}</span
+                                        {selectedMemberId
+                                            ? availableMembers.find(
+                                                  (m) =>
+                                                      m.id === selectedMemberId,
+                                              )?.name
+                                            : "Seleziona socio..."}
+                                        <SelectorIcon
+                                            class="ml-2 size-4 shrink-0 opacity-50"
+                                        />
+                                    </Button>
+                                {/snippet}
+                            </Popover.Trigger>
+                            <Popover.Content
+                                class="w-[--bits-popover-anchor-width] p-0"
+                            >
+                                <Command.Root>
+                                    <Command.Input
+                                        placeholder="Cerca socio..."
+                                    />
+                                    <Command.List>
+                                        <Command.Empty
+                                            >Nessun socio trovato.</Command.Empty
+                                        >
+                                        <Command.Group>
+                                            {#each availableMembers as member}
+                                                <Command.Item
+                                                    value={member.name}
+                                                    onSelect={() => {
+                                                        selectedMemberId =
+                                                            member.id;
+                                                        openCombobox = false;
+                                                    }}
                                                 >
-                                            {/if}
-                                        </div>
-                                    </Combobox.Item>
-                                {:else}
-                                    <div class="py-6 text-center text-sm">
-                                        Nessun socio trovato
-                                    </div>
-                                {/each}
-                            </Combobox.Content>
-                        </Combobox.Root>
+                                                    <CheckIcon
+                                                        class={cn(
+                                                            "mr-2 size-4",
+                                                            selectedMemberId ===
+                                                                member.id
+                                                                ? "opacity-100"
+                                                                : "opacity-0",
+                                                        )}
+                                                    />
+                                                    {member.name}
+                                                    {#if member.email}
+                                                        <span
+                                                            class="ml-2 text-xs text-muted-foreground"
+                                                        >
+                                                            {member.email}
+                                                        </span>
+                                                    {/if}
+                                                </Command.Item>
+                                            {/each}
+                                        </Command.Group>
+                                    </Command.List>
+                                </Command.Root>
+                            </Popover.Content>
+                        </Popover.Root>
                     </div>
                 </div>
 
