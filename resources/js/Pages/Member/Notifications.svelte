@@ -112,7 +112,13 @@
 
     function titleOf(n) {
         const data = n?.data || {};
-        return data?.title || "Notifica";
+        let title = data?.title || "Notifica";
+        
+        // Strip legacy prefixes for a cleaner UI as we have badges now
+        return title
+            .replace(/^Nuovo [Ee]vento: /, '')
+            .replace(/^Nuovo post nel comitato: /, '')
+            .replace(/^Nuovo [Pp]ost: /, '');
     }
 
     function bodyOf(n) {
@@ -139,7 +145,14 @@
             <Card.Content class="space-y-3">
                 {#if notifications?.data?.length}
                     {#each notifications.data as n (n.id)}
-                        <div class="rounded-lg border p-3">
+                        {@const type = n.data?.type || 'unknown'}
+                        <div class={[
+                            "rounded-lg border p-3 transition-all duration-200",
+                            type === 'broadcast' ? "border-zinc-800 bg-zinc-50 dark:border-zinc-200 dark:bg-zinc-900/50" : "",
+                            type === 'committee_post' ? "border-zinc-300 bg-zinc-100/30 dark:border-zinc-700 dark:bg-zinc-800/30" : "",
+                            type === 'event' ? "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black" : "",
+                            !n.read_at ? "shadow-md ring-1 ring-primary/10 -translate-y-[1px]" : "opacity-80"
+                        ].join(" ")}>
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0 flex-1">
                                     {#if urlOf(n)}
@@ -147,6 +160,15 @@
                                             href={urlOf(n)}
                                             class="block hover:opacity-80 transition-opacity"
                                         >
+                                            <div class="flex items-center gap-2 mb-1">
+                                                {#if type === 'broadcast'}
+                                                    <Badge variant="default" class="text-[9px] h-4 px-1 uppercase">Broadcast</Badge>
+                                                {:else if type === 'committee_post'}
+                                                    <Badge variant="secondary" class="text-[9px] h-4 px-1 uppercase">Comitato</Badge>
+                                                {:else if type === 'event'}
+                                                    <Badge variant="outline" class="text-[9px] h-4 px-1 uppercase">Evento</Badge>
+                                                {/if}
+                                            </div>
                                             <div class="font-medium truncate">
                                                 {titleOf(n)}
                                             </div>
@@ -159,6 +181,15 @@
                                             {/if}
                                         </Link>
                                     {:else}
+                                        <div class="flex items-center gap-2 mb-1">
+                                            {#if type === 'broadcast'}
+                                                <Badge variant="default" class="text-[9px] h-4 px-1 uppercase">Broadcast</Badge>
+                                            {:else if type === 'committee_post'}
+                                                <Badge variant="secondary" class="text-[9px] h-4 px-1 uppercase">Comitato</Badge>
+                                            {:else if type === 'event'}
+                                                <Badge variant="outline" class="text-[9px] h-4 px-1 uppercase">Evento</Badge>
+                                            {/if}
+                                        </div>
                                         <div class="font-medium truncate">
                                             {titleOf(n)}
                                         </div>

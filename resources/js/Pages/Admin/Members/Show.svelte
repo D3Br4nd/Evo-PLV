@@ -1,5 +1,5 @@
 <script>
-    /* eslint-disable no-undef */
+    /* eslint-disable */
     import { page } from "@inertiajs/svelte";
     import { router } from "@inertiajs/svelte";
     import QRCode from "qrcode";
@@ -580,6 +580,84 @@
                             <Button variant="outline" onclick={generateInvite}>
                                 Genera link invito (24h)
                             </Button>
+                        {/if}
+                    </Card.Content>
+                </Card.Root>
+
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Notifiche Push</Card.Title>
+                        <Card.Description>
+                            Dispositivi registrati per ricevere not ifiche push.
+                        </Card.Description>
+                    </Card.Header>
+                    <Card.Content class="space-y-3">
+                        {#if !member.push_subscriptions || member.push_subscriptions.length === 0}
+                            <p class="text-sm text-muted-foreground italic">
+                                Nessun dispositivo registrato per le notifiche.
+                            </p>
+                        {:else}
+                            <div class="space-y-2">
+                                {#each member.push_subscriptions as subscription}
+                                    {@const browserInfo =
+                                        subscription.endpoint.includes(
+                                            "fcm.googleapis.com",
+                                        )
+                                            ? "Chrome/Android"
+                                            : subscription.endpoint.includes(
+                                                    "updates.push.services.mozilla.com",
+                                                )
+                                              ? "Firefox"
+                                              : subscription.endpoint.includes(
+                                                      "web.push.apple.com",
+                                                  )
+                                                ? "Safari"
+                                                : "Browser sconosciuto"}
+                                    <div class="rounded-lg border p-3 text-sm">
+                                        <div
+                                            class="flex items-start justify-between gap-2"
+                                        >
+                                            <div class="flex-1 min-w-0">
+                                                <div
+                                                    class="font-medium text-xs mb-1"
+                                                >
+                                                    {browserInfo}
+                                                </div>
+                                                <div
+                                                    class="text-[10px] text-muted-foreground"
+                                                >
+                                                    Registrato: {new Date(
+                                                        subscription.created_at,
+                                                    ).toLocaleString("it-IT", {
+                                                        year: "numeric",
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        hour: "2-digit",
+                                                        minute: "2-digit",
+                                                    })}
+                                                </div>
+                                            </div>
+                                            <Badge
+                                                variant="outline"
+                                                class="h-5 text-[10px] bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800"
+                                            >
+                                                Attivo
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                {/each}
+                            </div>
+                            <div class="pt-2 border-t">
+                                <p class="text-xs text-muted-foreground">
+                                    <span class="font-medium"
+                                        >{member.push_subscriptions
+                                            .length}</span
+                                    >
+                                    {member.push_subscriptions.length === 1
+                                        ? "dispositivo registrato"
+                                        : "dispositivi registrati"}
+                                </p>
+                            </div>
                         {/if}
                     </Card.Content>
                 </Card.Root>

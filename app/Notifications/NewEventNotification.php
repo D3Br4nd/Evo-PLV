@@ -40,11 +40,11 @@ class NewEventNotification extends Notification
         $startDate = $this->event->start_date->format('d/m/Y H:i');
         
         return (new WebPushMessage)
-            ->title('Nuovo Evento: ' . $this->event->title)
+            ->title($this->event->title)
             ->body("In programma il {$startDate}. Scopri i dettagli!")
             ->icon('/favicon.png')
             ->data([
-                'url' => '/me/events',
+                'url' => '/me/events/' . $this->event->id,
                 'event_id' => $this->event->id,
             ])
             ->badge('/favicon.png');
@@ -58,10 +58,10 @@ class NewEventNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Nuovo Evento: ' . $this->event->title,
+            'title' => $this->event->title,
             'body' => "L'evento \"" . $this->event->title . "\" è stato aggiunto al calendario per il " . $this->event->start_date->format('d/m/Y H:i') . ".",
             'event_id' => $this->event->id,
-            'url' => '/me/events',
+            'url' => '/me/events/' . $this->event->id,
             'type' => 'event',
         ];
     }

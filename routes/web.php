@@ -61,6 +61,7 @@ Route::middleware('auth')->get('/me/card', [MemberCardController::class, 'show']
 Route::middleware('auth')->get('/me', [MemberHomeController::class, 'show'])->name('member.home');
 Route::middleware('auth')->get('/me/uuid', [MemberUuidController::class, 'show'])->name('member.uuid');
 Route::middleware('auth')->get('/me/events', [MemberEventsController::class, 'index'])->name('member.events');
+Route::middleware('auth')->get('/me/events/{event}', [MemberEventsController::class, 'show'])->name('member.events.show');
 Route::middleware('auth')->get('/me/profile', [MemberProfileController::class, 'show'])->name('member.profile');
 Route::middleware('auth')->patch('/me/profile', [MemberProfileController::class, 'update'])->name('member.profile.update');
 Route::middleware('auth')->post('/me/profile/avatar', [MemberProfileController::class, 'updateAvatar'])->name('member.profile.avatar');
@@ -75,6 +76,7 @@ Route::middleware('auth')->delete('/me/notifications/{notificationId}', [MemberN
 // Committees (PWA)
 Route::middleware('auth')->prefix('me/committees')->group(function () {
     Route::get('/', [\App\Http\Controllers\MemberCommitteeController::class, 'index'])->name('member.committees.index');
+    Route::get('/posts/{post}', [\App\Http\Controllers\MemberCommitteeController::class, 'showPost'])->name('member.committees.posts.show');
     Route::get('/{committee}', [\App\Http\Controllers\MemberCommitteeController::class, 'show'])->name('member.committees.show');
     Route::post('/posts/{post}/read', [\App\Http\Controllers\MemberCommitteeController::class, 'markAsRead'])->name('member.committees.posts.mark-as-read');
 });

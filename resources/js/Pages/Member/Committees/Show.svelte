@@ -1,4 +1,5 @@
 <script>
+    /* eslint-disable */
     import MemberLayout from "@/layouts/MemberLayout.svelte";
     import * as Card from "@/lib/components/ui/card";
     import * as Tabs from "@/lib/components/ui/tabs";
@@ -15,12 +16,14 @@
         Clock,
         CheckCircle2,
         Download,
+        ExternalLink,
     } from "lucide-svelte";
-    import { router } from "@inertiajs/svelte";
+    import { router, Link } from "@inertiajs/svelte";
     import { formatDistanceToNow } from "date-fns";
     import { it } from "date-fns/locale";
     import { onMount } from "svelte";
 
+    // eslint-disable-next-line no-undef
     let { committee } = $props();
 
     // Automatically mark unread posts as read when entering the message board
@@ -106,73 +109,104 @@
                                     ? "border-primary ring-1 ring-primary/20 bg-primary/5"
                                     : ""}
                             >
-                                <Card.Header class="p-3 pb-2">
-                                    <div
-                                        class="flex items-center justify-between"
+                                <div class="relative group">
+                                    <Link
+                                        href={`/me/committees/posts/${post.id}`}
+                                        class="block transition-colors"
                                     >
-                                        <div class="flex items-center gap-2">
-                                            <Avatar class="size-8">
-                                                <AvatarImage
-                                                    src={post.author.avatar_url}
-                                                />
-                                                <AvatarFallback
-                                                    class="text-[10px]"
+                                        <Card.Header class="p-3 pb-2">
+                                            <div
+                                                class="flex items-center justify-between"
+                                            >
+                                                <div
+                                                    class="flex items-center gap-2"
                                                 >
-                                                    {post.author.name.charAt(0)}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div class="flex flex-col">
+                                                    <Avatar class="size-8">
+                                                        <AvatarImage
+                                                            src={post.author
+                                                                .avatar_url}
+                                                        />
+                                                        <AvatarFallback
+                                                            class="text-[10px]"
+                                                        >
+                                                            {post.author.name.charAt(
+                                                                0,
+                                                            )}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-sm font-semibold"
+                                                            >{post.author
+                                                                .name}</span
+                                                        >
+                                                        <span
+                                                            class="text-[10px] text-muted-foreground"
+                                                        >
+                                                            {formatDistanceToNow(
+                                                                new Date(
+                                                                    post.created_at,
+                                                                ),
+                                                                {
+                                                                    addSuffix: true,
+                                                                    locale: it,
+                                                                },
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    {#if !post.is_read}
+                                                        <div
+                                                            class="size-2 rounded-full bg-primary"
+                                                            title="Non letto"
+                                                        ></div>
+                                                    {:else}
+                                                        <CheckCircle2
+                                                            class="size-3 text-muted-foreground/50"
+                                                        />
+                                                    {/if}
+                                                    <ExternalLink
+                                                        class="size-4 text-muted-foreground group-hover:text-primary transition-colors"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="mt-2 text-sm font-semibold group-hover:text-primary transition-colors"
+                                            >
+                                                {post.title}
+                                            </div>
+                                        </Card.Header>
+                                        <Card.Content class="p-3 pt-0">
+                                            <div
+                                                class="flex items-center gap-2"
+                                            >
+                                                {#if post.featured_image_url}
+                                                    <Badge
+                                                        variant="outline"
+                                                        class="text-[10px] px-1.5 py-0 h-4"
+                                                        >Img</Badge
+                                                    >
+                                                {/if}
+                                                {#if post.attachment_url}
+                                                    <Badge
+                                                        variant="outline"
+                                                        class="text-[10px] px-1.5 py-0 h-4"
+                                                        >Allegato</Badge
+                                                    >
+                                                {/if}
                                                 <span
-                                                    class="text-sm font-semibold"
-                                                    >{post.author.name}</span
+                                                    class="text-[10px] text-primary font-medium ml-auto"
                                                 >
-                                                <span
-                                                    class="text-[10px] text-muted-foreground"
-                                                >
-                                                    {formatDistanceToNow(
-                                                        new Date(
-                                                            post.created_at,
-                                                        ),
-                                                        {
-                                                            addSuffix: true,
-                                                            locale: it,
-                                                        },
-                                                    )}
+                                                    Leggi tutto →
                                                 </span>
                                             </div>
-                                        </div>
-                                        {#if !post.is_read}
-                                            <div
-                                                class="size-2 rounded-full bg-primary"
-                                                title="Non letto"
-                                            ></div>
-                                        {:else}
-                                            <CheckCircle2
-                                                class="size-3 text-muted-foreground/50"
-                                            />
-                                        {/if}
-                                    </div>
-                                    <Card.Title class="text-sm mt-2"
-                                        >{post.title}</Card.Title
-                                    >
-                                </Card.Header>
-                                <Card.Content class="p-3 pt-0 space-y-3">
-                                    <div
-                                        class="prose prose-sm max-w-none text-xs dark:prose-invert line-clamp-3"
-                                    >
-                                        {@html post.content}
-                                    </div>
-
-                                    {#if post.featured_image_url}
-                                        <div class="-mx-3">
-                                            <img
-                                                src={post.featured_image_url}
-                                                alt="Immagine post"
-                                                class="w-full object-cover border-y max-h-48"
-                                            />
-                                        </div>
-                                    {/if}
-
+                                        </Card.Content>
+                                    </Link>
+                                </div>
+                                <div class="px-3 pb-3 pt-0 space-y-2">
                                     {#if post.attachment_url}
                                         <div>
                                             <a
@@ -189,9 +223,8 @@
                                             </a>
                                         </div>
                                     {/if}
-                                </Card.Content>
-                                {#if !post.is_read}
-                                    <div class="px-3 pb-3 pt-0">
+
+                                    {#if !post.is_read}
                                         <button
                                             class="w-full text-[10px] font-bold uppercase tracking-wider text-primary py-1.5 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors"
                                             onclick={() => {
@@ -206,8 +239,8 @@
                                         >
                                             Segna come letto
                                         </button>
-                                    </div>
-                                {/if}
+                                    {/if}
+                                </div>
                             </Card.Root>
                         {/each}
                     </div>

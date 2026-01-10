@@ -75,4 +75,27 @@ class MemberCommitteeController extends Controller
 
         return back();
     }
+
+    /**
+     * Display a single committee post.
+     */
+    public function showPost(Request $request, CommitteePost $post)
+    {
+        $user = $request->user();
+
+        // Ensure user belongs to the committee of this post
+        if (!$post->committee->members()->where('users.id', $user->id)->exists()) {
+            abort(403);
+        }
+
+        $post->load('author:id,name,avatar_path');
+        
+        // Mark as read automatically when viewing the detail
+        $post->readers()->syncWithoutDetaching([$user->id => ['read_at' => now()]]);
+
+        return Inertia::render('Member/Committees/Post', [
+            'post' => $post,
+            'committee' => $post->committee,
+        ]);
+    }
 }

@@ -1,11 +1,11 @@
 <script>
     /* eslint-disable */
     import MemberLayout from "@/layouts/MemberLayout.svelte";
-    import { router } from "@inertiajs/svelte";
+    import { router, Link } from "@inertiajs/svelte";
     import * as Card from "@/lib/components/ui/card";
     import { Badge } from "@/lib/components/ui/badge";
     import { Button } from "@/lib/components/ui/button";
-    import { ChevronLeft, ChevronRight } from "lucide-svelte";
+    import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-svelte";
 
     let { events, currentDate } = $props();
 
@@ -82,8 +82,12 @@
     $effect(() => {
         // Default selection: today if in current month, otherwise first of month.
         const today = new Date();
-        const sameMonth = today.getFullYear() === current.getFullYear() && today.getMonth() === current.getMonth();
-        selectedDate = sameMonth ? ymd(today) : ymd(new Date(current.getFullYear(), current.getMonth(), 1));
+        const sameMonth =
+            today.getFullYear() === current.getFullYear() &&
+            today.getMonth() === current.getMonth();
+        selectedDate = sameMonth
+            ? ymd(today)
+            : ymd(new Date(current.getFullYear(), current.getMonth(), 1));
     });
 
     let dayEvents = $derived.by(() => {
@@ -119,23 +123,42 @@
 </script>
 
 <MemberLayout title="Eventi">
-    {#snippet headerActions()}
-        <div class="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onclick={previousMonth} aria-label="Mese precedente">
-                <ChevronLeft class="size-5" />
-            </Button>
-            <div class="min-w-0 text-sm font-medium capitalize truncate max-w-[12rem]">{monthLabel}</div>
-            <Button variant="ghost" size="icon" onclick={nextMonth} aria-label="Mese successivo">
-                <ChevronRight class="size-5" />
-            </Button>
-        </div>
-    {/snippet}
-
     <div class="space-y-4">
+        <div class="flex items-center justify-between gap-4 py-2">
+            <h2 class="text-2xl font-bold tracking-tight">Eventi</h2>
+            <div
+                class="flex items-center gap-1 bg-muted/30 rounded-lg p-1 border"
+            >
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    class="size-8"
+                    onclick={previousMonth}
+                    aria-label="Mese precedente"
+                >
+                    <ChevronLeft class="size-4" />
+                </Button>
+                <div class="min-w-0 text-sm font-semibold capitalize px-2">
+                    {monthLabel}
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    class="size-8"
+                    onclick={nextMonth}
+                    aria-label="Mese successivo"
+                >
+                    <ChevronRight class="size-4" />
+                </Button>
+            </div>
+        </div>
+
         <Card.Root class="overflow-hidden">
             <Card.Content class="p-0">
                 <div class="px-4 pt-4 pb-3">
-                    <div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground">
+                    <div
+                        class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground"
+                    >
                         {#each weekdays as w (w)}
                             <div class="py-1">{w}</div>
                         {/each}
@@ -152,14 +175,22 @@
                                     class={[
                                         "h-11 rounded-md border text-sm font-medium",
                                         "bg-background hover:bg-accent/50 transition-colors",
-                                        isSelected ? "bg-primary text-primary-foreground border-primary" : "border-border",
+                                        isSelected
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "border-border",
                                     ].join(" ")}
                                     onclick={() => (selectedDate = cell.key)}
                                 >
-                                    <div class="flex h-full flex-col items-center justify-center gap-1">
+                                    <div
+                                        class="flex h-full flex-col items-center justify-center gap-1"
+                                    >
                                         <div>{cell.day}</div>
                                         {#if hasEvents}
-                                            <div class={isSelected ? "h-1 w-6 rounded-full bg-primary-foreground/70" : "h-1 w-6 rounded-full bg-primary/60"}></div>
+                                            <div
+                                                class={isSelected
+                                                    ? "h-1 w-6 rounded-full bg-primary-foreground/70"
+                                                    : "h-1 w-6 rounded-full bg-primary/60"}
+                                            ></div>
                                         {:else}
                                             <div class="h-1 w-6"></div>
                                         {/if}
@@ -174,25 +205,48 @@
 
         <div class="space-y-3">
             {#if dayEvents?.length}
-                <div class="text-sm font-medium">
-                    Eventi del giorno
-                </div>
+                <div class="text-sm font-medium">Eventi del giorno</div>
                 {#each dayEvents as e (e.id)}
-                    <Card.Root>
-                        <Card.Content class="p-4">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="min-w-0">
-                                    <div class="font-semibold truncate">{e.title}</div>
-                                    <div class="text-xs text-muted-foreground">
-                                        {fmtDateTime(e.start_date)} → {fmtDateTime(e.end_date)}
+                    <Link href={`/me/events/${e.id}`} class="block group">
+                        <Card.Root
+                            class="group-hover:border-primary transition-all duration-200"
+                        >
+                            <Card.Content class="p-4">
+                                <div
+                                    class="flex items-start justify-between gap-3"
+                                >
+                                    <div class="min-w-0">
+                                        <div
+                                            class="font-semibold truncate group-hover:text-primary transition-colors"
+                                        >
+                                            {e.title}
+                                        </div>
+                                        <div
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            {fmtDateTime(e.start_date)} → {fmtDateTime(
+                                                e.end_date,
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <Badge
+                                            variant={e.type === "festival"
+                                                ? "secondary"
+                                                : e.type === "meeting"
+                                                  ? "outline"
+                                                  : "default"}
+                                        >
+                                            {typeLabel(e.type)}
+                                        </Badge>
+                                        <ExternalLink
+                                            class="size-4 text-muted-foreground group-hover:text-primary transition-colors"
+                                        />
                                     </div>
                                 </div>
-                                <Badge variant={e.type === "festival" ? "secondary" : e.type === "meeting" ? "outline" : "default"}>
-                                    {typeLabel(e.type)}
-                                </Badge>
-                            </div>
-                        </Card.Content>
-                    </Card.Root>
+                            </Card.Content>
+                        </Card.Root>
+                    </Link>
                 {/each}
             {:else}
                 <div class="text-sm text-muted-foreground">
@@ -202,5 +256,3 @@
         </div>
     </div>
 </MemberLayout>
-
-

@@ -29,6 +29,13 @@ class MemberEventsController extends Controller
             'currentDate' => $date->format('Y-m-d'),
         ]);
     }
+
+    public function show(Event $event)
+    {
+        return Inertia::render('Member/Events/Show', [
+            'event' => $event,
+        ]);
+    }
 }
 
 
