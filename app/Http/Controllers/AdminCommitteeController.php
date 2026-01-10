@@ -312,6 +312,20 @@ class AdminCommitteeController extends Controller
             ->where('id', $postId)
             ->firstOrFail();
 
+        // Delete associated database notifications
+        \DB::table('notifications')
+            ->where('type', 'App\\Notifications\\NewCommitteePost')
+            ->whereRaw("(data::jsonb)->>'post_id' = ?", [$postId])
+            ->delete();
+
+        // Delete associated files if any
+        if ($post->featured_image_path) {
+            \Storage::disk('public')->delete($post->featured_image_path);
+        }
+        if ($post->attachment_path) {
+            \Storage::disk('public')->delete($post->attachment_path);
+        }
+
         $post->delete();
 
         return back()->with('flash', [

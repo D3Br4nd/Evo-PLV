@@ -113,6 +113,12 @@ class AdminBroadcastController extends Controller
     {
         $broadcast = BroadcastNotification::findOrFail($id);
 
+        // Delete associated database notifications
+        \DB::table('notifications')
+            ->where('type', 'App\\Notifications\\NewBroadcastNotification')
+            ->whereRaw("(data::jsonb)->>'broadcast_id' = ?", [$id])
+            ->delete();
+
         // Delete associated files
         if ($broadcast->featured_image_path) {
             Storage::disk('public')->delete($broadcast->featured_image_path);

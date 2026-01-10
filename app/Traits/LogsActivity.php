@@ -76,6 +76,21 @@ trait LogsActivity
                 : "Socio {$userName} rimosso dal comitato {$committeeName}";
         }
 
+        if ($class === \App\Models\Membership::class) {
+            $model->loadMissing('user');
+            $userName = $model->user?->name ?? 'Socio sconosciuto';
+            $year = $model->year;
+            
+            switch ($action) {
+                case 'created':
+                    return "Creato tesseramento {$year} per {$userName}";
+                case 'deleted':
+                    return "Eliminato tesseramento {$year} per {$userName}";
+                default:
+                    return ucfirst($action) . " tesseramento {$year} per {$userName}";
+            }
+        }
+
         $title = $model->title ?? $model->name ?? $model->id;
 
         switch ($action) {

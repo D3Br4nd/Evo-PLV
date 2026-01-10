@@ -28,5 +28,3 @@ fi
 
 # Hand off to the original FrankenPHP/Laravel entrypoint.
 exec docker-php-entrypoint "$@"
-
-
