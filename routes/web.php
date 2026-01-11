@@ -190,8 +190,7 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(fu
     Route::delete('committees/{committee}/image', [\App\Http\Controllers\AdminCommitteeController::class, 'destroyCommitteeImage'])
         ->name('committees.image.destroy');
     
-    Route::resource('content-pages', \App\Http\Controllers\AdminContentPageController::class)
-        ->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('content-pages', \App\Http\Controllers\AdminContentPageController::class);
     
     // Broadcast Notifications
     Route::resource('broadcasts', \App\Http\Controllers\AdminBroadcastController::class)

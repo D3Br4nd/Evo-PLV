@@ -21,6 +21,11 @@ class AdminContentPageController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        return Inertia::render('Admin/ContentPages/Create');
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -45,7 +50,14 @@ class AdminContentPageController extends Controller
         ]);
 
 
-        return redirect()->back()->with('success', 'Pagina creata.');
+        return redirect()->route('content-pages.index')->with('success', 'Pagina creata.');
+    }
+
+    public function edit(ContentPage $content_page)
+    {
+        return Inertia::render('Admin/ContentPages/Edit', [
+            'page' => $content_page,
+        ]);
     }
 
     public function update(Request $request, ContentPage $content_page)
@@ -71,7 +83,7 @@ class AdminContentPageController extends Controller
         ]);
 
 
-        return redirect()->back()->with('success', 'Pagina aggiornata.');
+        return redirect()->route('content-pages.index')->with('success', 'Pagina aggiornata.');
     }
 
     public function destroy(ContentPage $content_page)
