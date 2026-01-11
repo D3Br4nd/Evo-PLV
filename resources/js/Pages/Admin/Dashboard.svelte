@@ -239,49 +239,7 @@
             </Card.Root>
         </div>
 
-        <!-- Row 3: Visual Activity Overview -->
-        <Card.Root>
-            <Card.Header>
-                <Card.Title class="text-base">Panoramica Attività</Card.Title>
-                <Card.Description>Distribuzione delle azioni negli ultimi 7 giorni</Card.Description>
-            </Card.Header>
-            <Card.Content>
-                {#if recentActivity?.length}
-                    {@const last7Days = Array.from({length: 7}, (_, i) => {
-                        const d = new Date();
-                        d.setDate(d.getDate() - (6 - i));
-                        return d;
-                    })}
-                    {@const activityByDay = last7Days.map(day => {
-                        const dayStr = day.toISOString().split('T')[0];
-                        const count = recentActivity.filter(a => a.created_at.startsWith(dayStr)).length;
-                        return { day, count };
-                    })}
-                    {@const maxCount = Math.max(...activityByDay.map(d => d.count), 1)}
-                    
-                    <div class="flex items-end justify-between gap-2 h-32">
-                        {#each activityByDay as {day, count}}
-                            <div class="flex flex-col items-center gap-2 flex-1">
-                                <div class="relative w-full bg-muted/30 rounded-t-lg border border-muted flex-1 flex items-end">
-                                    <div 
-                                        class="w-full bg-gradient-to-t from-primary/80 to-primary/40 rounded-t-lg transition-all hover:opacity-80"
-                                        style="height: {count > 0 ? (count / maxCount) * 100 : 2}%"
-                                        title="{count} attività"
-                                    ></div>
-                                </div>
-                                <span class="text-[10px] text-muted-foreground font-medium">
-                                    {day.toLocaleDateString('it-IT', { weekday: 'short' })}
-                                </span>
-                            </div>
-                        {/each}
-                    </div>
-                {:else}
-                    <div class="h-32 flex items-center justify-center text-sm text-muted-foreground">
-                        Nessuna attività recente da visualizzare
-                    </div>
-                {/if}
-            </Card.Content>
-        </Card.Root>
+        <!-- Row 3: Activity Table -->
 
         <Card.Root>
             <Card.Header class="pb-3">
