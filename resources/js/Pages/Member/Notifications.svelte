@@ -49,6 +49,13 @@
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
             });
+            
+            // Convert subscription to JSON and add contentEncoding
+            const subscriptionData = sub.toJSON();
+            subscriptionData.contentEncoding = PushManager.supportedContentEncodings?.[0] || 'aesgcm';
+            
+            console.log('Sending push subscription:', subscriptionData);
+            
             const res = await fetch("/me/push-subscriptions", {
                 method: "POST",
                 headers: {
@@ -58,7 +65,7 @@
                         .querySelector('meta[name="csrf-token"]')
                         ?.getAttribute("content"),
                 },
-                body: JSON.stringify(sub),
+                body: JSON.stringify(subscriptionData),
             });
             if (!res.ok) {
                 pushEnabled = false;
