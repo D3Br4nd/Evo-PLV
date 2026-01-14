@@ -1,176 +1,108 @@
-# Pro Loco Venticanese Evolution
+# 🇮🇹 Pro Loco Venticanese Evolution
 
-PWA per la gestione di eventi e tesseramenti della Pro Loco Venticanese.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Laravel](https://img.shields.io/badge/Laravel-12.0-FF2D20.svg)
+![Svelte](https://img.shields.io/badge/Svelte-5.0-FF3E00.svg)
+![Tailwind](https://img.shields.io/badge/Tailwind-4.0-38B2AC.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18.0-336791.svg)
 
-## 🚀 Stack Tecnologico
-
-### Backend
-- **PHP**: 8.4
-- **Framework**: Laravel 12.44
-- **Server**: FrankenPHP (Caddy + PHP)
-- **Database**: PostgreSQL 18.1
-- **Cache/Queue**: Redis 8.4.0
-- **WebSockets**: Laravel Reverb
-
-### Frontend
-- **Framework**: Svelte 5 (Runes)
-- **Router**: Inertia.js 2.0
-- **Styling**: Tailwind CSS 4.1 (CSS-first)
-- **Theme**: Shadcn Zinc (Monochrome)
-- **Build**: Vite 5
-- **PWA**: vite-plugin-pwa
-
-## 🆕 Fresh Install (Docker)
-
-Segui questi passaggi per avviare il progetto da zero su una nuova macchina.
-
-### 1. Preparazione
-
-Clona il repository ed entra nella cartella:
-
-```bash
-git clone <repository-url> plv_evo
-cd plv_evo
-```
-
-Crea il file `.env` (esempio minimo):
-
-```bash
-cat > .env <<'EOF'
-APP_NAME="Pro Loco Venticanese"
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost:8000
-FORCE_HTTPS=false
-
-APP_KEY=
-
-DB_CONNECTION=pgsql
-DB_HOST=plv_evo_db
-DB_PORT=5432
-DB_DATABASE=plv_evo
-DB_USERNAME=sail
-DB_PASSWORD=password
-
-REDIS_HOST=plv_evo_redis
-REDIS_PORT=6379
-
-REVERB_APP_ID=plv
-REVERB_APP_KEY=plv-key
-REVERB_APP_SECRET=plv-secret
-REVERB_HOST=reverb
-REVERB_PORT=8080
-REVERB_SCHEME=http
-
-APP_PORT=8000
-DB_PORT_FORWARD=5432
-REDIS_PORT_FORWARD=6379
-REVERB_PORT_FORWARD=8080
-VITE_PORT_FORWARD=5173
-EOF
-```
-
-### 2. Installazione Dipendenze
-
-Installa le dipendenze di PHP e Node.js usando Docker (senza bisogno di avere PHP/Node installati localmente):
-
-```bash
-# Dipendenze PHP (Vendor)
-docker run --rm -v $(pwd):/app -w /app composer:2 install --ignore-platform-reqs
-
-# Dipendenze Node.js (Node Modules)
-docker run --rm -v $(pwd):/app -w /app node:24-alpine npm install
-```
-
-### 3. Build & Avvio
-
-Compila gli asset e avvia i container:
-
-```bash
-# Rete Docker condivisa (Nginx Proxy Manager, ecc.)
-docker network create plv_network || true
-
-# Avvia lo stack
-docker compose up -d --build
-```
-
-> Nota: in produzione **non** serve il container `vite`. È disponibile solo per sviluppo con `--profile dev`.
-
-### 4. Database Setup (Migrazioni e Seeders)
-
-Una volta che i container sono attivi (verifica con `docker compose ps`), esegui le migrazioni e il seeding del database:
-
-**IMPORTANTE**: Questo comando resetta il database e inserisce i dati di esempio.
-
-```bash
-docker compose exec app php artisan migrate:fresh --seed
-```
-
-> Nota: le migrazioni sono **squashate**. Laravel caricherà lo schema da `database/schema/pgsql-schema.sql` e poi applicherà eventuali nuove migrazioni future (se presenti).
-
-### 4b. Bootstrap SuperAdmin (Produzione)
-
-Imposta queste variabili nel tuo `.env`:
-
-- `SUPERADMIN_NAME`
-- `SUPERADMIN_EMAIL`
-- `SUPERADMIN_PASSWORD`
-
-Poi esegui:
-
-```bash
-docker compose exec app php artisan plv:bootstrap-superadmin
-```
-
-> Template: vedi `env.example.template` (usa valori placeholder, non copiarlo “as-is” in produzione).
-
-### 5. Accesso
-
-- **Web App**: [http://localhost:8000](http://localhost:8000)
-- **Admin Login**: usa le credenziali `SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD` dopo il bootstrap
-- **Tessera socio (PWA)**: dopo login come socio → `/me/card`
+**Pro Loco Venticanese Evolution** è la piattaforma digitale per la gestione moderna della Pro Loco di Venticano. Un'unica applicazione che unisce un portale pubblico, una PWA per i soci e una dashboard amministrativa avanzata.
 
 ---
 
-## 🔧 Comandi Utili per lo Sviluppo
+## ✨ Funzionalità Principali
 
-```bash
-# Avvio in modalità sviluppo (mount del codice PHP + assets via Vite)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+### 📱 Per i Soci (PWA)
+- **Tessera Digitale**: QR Code personale sempre disponibile.
+- **Profilo Utente**: Gestione dati, avatar e preferenze.
+- **Eventi & Biglietti**: Accesso rapido agli eventi della Pro Loco.
+- **Notifiche**: Aggiornamenti in tempo reale su riunioni e attività.
+- **Comitati**: Spazio dedicato per i gruppi di lavoro.
 
-# Avviare Vite (solo sviluppo/HMR)
-docker compose --profile dev up -d vite
+### 🛠️ Per l'Amministrazione
+- **Dashboard Completa**: Panoramica delle attività e statistiche.
+- **Gestione Soci**: Database centralizzato con export/import CSV.
+- **Broadcast System**: Invio notifiche e email massive.
+- **CMS**: Gestione pagine pubbliche e contenuti.
+- **Check-in Eventi**: Sistema di verifica presenze.
 
-# Logs in tempo reale
-docker compose logs -f
+---
 
-# Accesso alla shell del container app
-docker compose exec app sh
+## 🚀 Installazione (Docker)
 
-# Eseguire comandi Artisan
-docker compose exec app php artisan [command]
+Il progetto è completamente containerizzato per garantire un avvio rapido e consistente.
 
-# Riavviare i container
-docker compose restart
-```
+### Prerequisiti
+- [Docker Engine](https://docs.docker.com/engine/install/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-## 📁 Struttura Progetto
+### Quick Start
 
-```
-plv_evo/
-├── app/
-│   ├── Models/         # User, Event, Membership, Project (UUIDv7)
-├── database/
-│   ├── schema/         # pgsql-schema.sql (schema dump per fresh install)
-│   ├── migrations/     # nuove migrazioni future (cartella mantenuta vuota/clean)
-├── resources/
-│   ├── js/Pages/       # Svelte Components (Admin/Members, Admin/Events, Admin/Projects)
-├── docker/             # Configurazioni e volumi persistenti
-├── Dockerfile          # FrankenPHP image definition
-├── docker-compose.yml  # Servizi: app, db, redis, reverb, vite
-```
+1. **Clona il repository**
+   ```bash
+   git clone https://github.com/pro-loco-venticanese/plv-evo.git
+   cd plv_evo
+   ```
 
-## 👥 Team
+2. **Configura l'ambiente**
+   Copia il file di esempio e configuralo (se necessario):
+   ```bash
+   cp .env.example .env
+   ```
 
-- **Tech Lead**: Massimiliano
-- **Stack**: Bleeding Edge PHP Ecosystem
+3. **Avvia con Docker**
+   ```bash
+   # Avvia i container in background
+   docker compose up -d --build
+   ```
+
+4. **Inizializza il Database**
+   Esegui migrazioni e seed (resetta il DB!):
+   ```bash
+   docker compose exec app php artisan migrate:fresh --seed
+   ```
+
+5. **Accedi**
+   - **Frontend**: [http://localhost:8000](http://localhost:8000)
+   - **Admin CP**: Accedi con le credenziali configurate nel seeder o crea un super admin:
+     ```bash
+     docker compose exec app php artisan plv:make-superadmin
+     ```
+
+---
+
+## 🏗️ Stack Tecnologico
+
+Il progetto utilizza uno stack "Bleeding Edge" per massimizzare performance e manutenibilità:
+
+- **Backend**: Laravel 12 (PHP 8.4) con Laravel Reverb (WebSockets).
+- **Frontend**: Svelte 5 (Runes Syntax) + Inertia.js 2.0.
+- **Style**: Tailwind CSS 4 (Configurazione CSS-first).
+- **Database**: PostgreSQL 18 con Primary Keys UUIDv7.
+- **Server**: FrankenPHP (Caddy Server integrato).
+
+---
+
+## 📏 Best Practices & Standard
+
+Per mantenere alta la qualità del codice, seguiamo queste regole rigorose:
+
+1. **Svelte 5 Runes**: Utilizzare sempre la nuova sintassi (`$state`, `$props`). NO `export let`.
+2. **UUIDv7**: Tutti i modelli Eloquent devono usare il trait `HasUuids` con UUIDv7.
+3. **Tailwind 4**: Configurazione via CSS variables in `app.css`. NO `tailwind.config.js`.
+4. **Theme**: Utilizzare il tema standard Shadcn Zinc.
+5. **Migrations**: Single-file schema (`schema/pgsql-schema.sql`) + future migrations schiacciate.
+
+---
+
+## 🗺️ Roadmap & Next Steps
+
+Visualizza il file [TODO.md](./TODO.md) per la lista aggiornata delle attività, tra cui:
+- [ ] Implementazione invio email broadcast.
+- [ ] Completamento check-in riunioni.
+
+---
+
+## 📄 Licenza
+
+Questo progetto è rilasciato sotto licenza **MIT**. Contribuisci liberamente!

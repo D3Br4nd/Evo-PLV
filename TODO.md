@@ -1,3 +1,9 @@
+# Cose da sistemare
+
+- [ ] Completare funzionalità di check-in per le riunioni
+
+---
+
 # 📧 Broadcast Email Implementation Plan
 
 ## Obiettivo
