@@ -24,5 +24,5 @@ trigger: always_on
 
 ## 4. Context & Tone
 - This is a PWA for "Pro Loco Venticanese".
-- The Tech Lead is "Massimiliano".
+- The Tech Lead is "Max Brandini".
 - Keep the UI minimal, clean, and high-performance.

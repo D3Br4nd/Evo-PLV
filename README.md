@@ -91,7 +91,7 @@ Per mantenere alta la qualità del codice, seguiamo queste regole rigorose:
 2. **UUIDv7**: Tutti i modelli Eloquent devono usare il trait `HasUuids` con UUIDv7.
 3. **Tailwind 4**: Configurazione via CSS variables in `app.css`. NO `tailwind.config.js`.
 4. **Theme**: Utilizzare il tema standard Shadcn Zinc.
-5. **Migrations**: Single-file schema (`schema/pgsql-schema.sql`) + future migrations schiacciate.
+5. **Migrations**: Single-file schema (`database/migrations/2025_01_01_000000_create_plv_schema.php`) (Squashed).
 
 ---
 
