@@ -9,6 +9,7 @@
         Bell,
         Users,
         Briefcase,
+        FileText,
     } from "lucide-svelte";
     import { cn } from "@/lib/utils/cn";
     import { buttonVariants } from "@/lib/components/ui/button";
@@ -124,6 +125,28 @@
                     <div class="font-semibold">Progetti</div>
                     <div class="text-xs text-muted-foreground">
                         I tuoi task e stati progetto
+                    </div>
+                </div>
+            </div>
+        </Link>
+
+        <Link
+            href="/me/pages"
+            class={cn(
+                "block rounded-xl border bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-ring",
+            )}
+        >
+            <div class="flex items-center gap-4 px-4 py-4">
+                <div
+                    class="flex h-10 w-10 items-center justify-center rounded-lg border bg-background"
+                >
+                    <FileText class="size-6 text-amber-600" />
+                </div>
+                <div class="min-w-0">
+                    <div class="font-semibold">Informazioni</div>
+                    <div class="text-xs text-muted-foreground">
+                        Pagine informative e comunicazioni
                     </div>
                 </div>
             </div>

@@ -106,6 +106,14 @@ Route::get('/p/{slug}', function($slug) {
 })->name('public.page');
 
 // Member content pages (PWA)
+Route::middleware('auth')->get('/me/pages', function() {
+    $pages = \App\Models\ContentPage::where('status', 'published')
+        ->whereNotNull('published_at')
+        ->orderByDesc('published_at')
+        ->get();
+    return Inertia::render('Member/Pages', ['pages' => $pages]);
+})->name('member.pages');
+
 Route::middleware('auth')->get('/me/content/{slug}', [\App\Http\Controllers\PublicContentPageController::class, 'showMember'])->name('member.content');
 
 // Public legal pages
