@@ -139,6 +139,10 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(fu
         ->name('members.export');
     Route::post('members/import', [\App\Http\Controllers\AdminMemberController::class, 'importCsv'])
         ->name('members.import');
+    
+    // Member Search (JSON)
+    Route::get('members/search', [\App\Http\Controllers\AdminMemberController::class, 'search'])
+        ->name('members.search');
 
     Route::resource('members', \App\Http\Controllers\AdminMemberController::class);
     Route::post('members/{member}/invite', [AdminMemberInvitationController::class, 'store'])

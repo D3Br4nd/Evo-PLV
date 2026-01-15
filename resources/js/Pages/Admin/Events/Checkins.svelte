@@ -9,6 +9,7 @@
 
     import ChevronLeft from "lucide-svelte/icons/chevron-left";
     import Download from "lucide-svelte/icons/download";
+    import MemberSearch from "@/Components/MemberSearch.svelte";
 
     let { event, checkins } = $props();
     let flash = $derived($page.props.flash);
@@ -73,11 +74,31 @@
             <Card.Header>
                 <Card.Title>Registra presenza</Card.Title>
                 <Card.Description>
-                    Inserisci il codice UUID del socio (tramite scanner o
-                    copia-incolla).
+                    Cerca il socio per nome o inserisci il codice UUID.
                 </Card.Description>
             </Card.Header>
-            <Card.Content class="space-y-3">
+            <Card.Content class="space-y-4">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Cerca Socio
+                    </label>
+                    <MemberSearch onSelect={(id) => {
+                        qr_code = id;
+                        submit();
+                    }} />
+                </div>
+
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <span class="w-full border-t" />
+                    </div>
+                    <div class="relative flex justify-center text-xs uppercase">
+                        <span class="bg-background px-2 text-muted-foreground">
+                            Oppure
+                        </span>
+                    </div>
+                </div>
+
                 <div class="flex gap-2">
                     <Input
                         bind:value={qr_code}

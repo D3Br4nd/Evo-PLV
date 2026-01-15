@@ -113,6 +113,48 @@ class AdminMemberController extends Controller
     }
 
     /**
+     * Search members by name/email (JSON)
+     */
+    public function search(Request $request)
+    {
+        $search = $request->input('q');
+       
+        if (strlen($search) < 2) {
+            return response()->json([]);
+        }
+
+        $year = now()->year;
+
+        $members = User::query()
+            ->where(function ($q) use ($search) {
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('email', 'ilike', "%{$search}%")
+                  ->orWhere('first_name', 'ilike', "%{$search}%")
+                  ->orWhere('last_name', 'ilike', "%{$search}%");
+            })
+            // Optimize: check membership status for current year
+            ->with(['memberships' => fn($q) => $q->where('year', $year)])
+            ->limit(20)
+            ->get()
+            ->map(function ($user) use ($year) {
+                $membership = $user->memberships->first(); // Since we filtered by year
+                $status = 'inactive';
+                if ($membership && $membership->status === 'active') {
+                    $status = 'active';
+                }
+
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'status' => $status,
+                ];
+            });
+
+        return response()->json($members);
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(Request $request, User $member)

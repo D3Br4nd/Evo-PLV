@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    "strict": true,
+    "checkJs": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
         "resources/js/*"
       ]
-    },
-    "checkJs": false
+    }
   },
   "exclude": [
     "node_modules",
@@ -17,6 +21,7 @@
   "include": [
     "resources/js/**/*",
     "vite.config.js",
-    "tailwind.config.js"
+    "tailwind.config.js",
+    "svelte.config.js"
   ]
 }
